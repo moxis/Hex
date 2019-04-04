@@ -1,9 +1,13 @@
 import java.util.*;
 
 public abstract class Game {
-    public abstract List<int[]> returnAvailableMoves();
+    int currentPlayer = 1;
 
-    public abstract Game play(int[] move);
+    public abstract List<int[]> getAvailableActions();
+
+    public abstract Game getNextState(int[] move);
 
     public abstract int getWinner();
+
+    public abstract int[][] getState();
 }
