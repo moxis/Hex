@@ -1,13 +1,29 @@
 import java.util.*;
 
 public abstract class Game {
-    int currentPlayer = 1;
+    private int[][] state;
+    int currentPlayer;
 
-    public abstract List<int[]> getAvailableActions();
+    Game(int[][] state, int currentPlayer) {
+        this.state = state;
+        this.currentPlayer = currentPlayer;
+    }
 
+    // Return a list of available moves
+    public abstract List<int[]> getAvailableMoves();
+
+    // Returns a new game object updated with new state
     public abstract Game getNextState(int[] move);
 
+    // Checks to see if there are any new winners
+    // returns 0 if there are no winners, otherwise -1 or 1
     public abstract int getWinner();
 
-    public abstract int[][] getState();
+    // getState just returns the current state
+    public int[][] getState() {
+        return this.state;
+    }
+
+    // Update the state of the current game state and flip the current player
+    public abstract void play(int[] move);
 }
