@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class Hex extends Game {
-    static int[][] DEFAULT_BOARD = new int[5][5];
+    static int[][] DEFAULT_BOARD = new int[3][3];
     Map<Integer, Set<Integer>> disjointSets = new HashMap<>();
     int[] lastMove;
 

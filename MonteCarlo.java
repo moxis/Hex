@@ -52,6 +52,7 @@ class MonteCarlo {
 
         // 1000 searches --> will be changed to time based search later
         for(int i = 0; i < 100000; i++) {
+            System.out.println(i);
             // Select best node based on UCB1 evaluation equation
             TreeNode node = select(state);
             int winner = node.game.getWinner();
@@ -153,7 +154,7 @@ class MonteCarlo {
         while(node != null) {
             node.numRollouts += 1;
 
-            if(node.game.currentPlayer == winner) {
+            if(node.game.currentPlayer == -winner) {
                 node.numWins += 1;
             }
 
