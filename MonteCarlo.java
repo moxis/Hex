@@ -1,12 +1,22 @@
 import java.util.*;
 
-class MonteCarlo {
+class MonteCarlo {    
+    static long selectTime = 0;
+    static long checkWinner = 0;
+    static long expansionTime = 0;
+    static long simulationTime = 0;
+    static long propagationTime = 0;
+
+    static long gettingUnexploredMoves = 0;
+    static long gettingNextState = 0;
+    static long gettingAvailableMoves = 0;
+
     private Game game;
     private Random random = new Random();
 
     // Storing states so that we can continue exploration when next state arrives
     // Tree of different game states
-    private Map<Integer, TreeNode> nodes = new HashMap<Integer, TreeNode>();
+    private Map<String, TreeNode> nodes = new HashMap<String, TreeNode>();
 
     MonteCarlo(Game game) {
         this.game = game;
@@ -14,7 +24,7 @@ class MonteCarlo {
 
     // This one initializes and creates the root node which represents the initial state of the game
     public void initializeNode(int[][] state) {
-        Integer stateHash = hash(state);
+        String stateHash = hash(state);
         if(!nodes.containsKey(stateHash)) {
             List<int[]> unexploredMoves = game.getAvailableMoves();
             TreeNode rootNode = new TreeNode(null, game, null, unexploredMoves);
@@ -22,8 +32,14 @@ class MonteCarlo {
         }
     }
 
-    public static Integer hash(int[][] state) {
-        return Arrays.deepHashCode(state);
+    public static String hash(int[][] state) {
+        String hash = "";
+        for(int x = 0; x < state.length; x++) {
+            for(int y = 0; y < state[x].length; y++) {
+                hash += state[x][y];
+            }
+        }
+        return hash;
     }
 
     public static void printBoard(int[][] state) {
@@ -50,21 +66,69 @@ class MonteCarlo {
     public void search(int[][] state) {
         initializeNode(state);
 
-        // 1000 searches --> will be changed to time based search later
-        for(int i = 0; i < 100000; i++) {
-            System.out.println(i);
+
+        // 5 seconds thinking time -> hex blitz mode
+        long start = System.currentTimeMillis();
+        int i = 0;
+        while(false || (System.currentTimeMillis()-start) < 5000) {
+            i += 1;
+            // System.out.println(i);
             // Select best node based on UCB1 evaluation equation
+            long startTime = System.nanoTime();
             TreeNode node = select(state);
+            long endTime = System.nanoTime();
+            selectTime += (endTime - startTime);
+
+            startTime = System.nanoTime();
             int winner = node.game.getWinner();
+            endTime = System.nanoTime();
+            checkWinner += (endTime - startTime);
 
             // Expand if node is a leaf and has no winners
             if (!node.isLeaf() && winner == 0) {
+                startTime = System.nanoTime();
                 node = expand(node);
+                endTime = System.nanoTime();
+                expansionTime += (endTime - startTime);
+
+                startTime = System.nanoTime();
                 winner = simulate(node);
+                endTime = System.nanoTime();
+                simulationTime += (endTime - startTime);
             }
             // Update the other nodes
+            startTime = System.nanoTime();
             this.backpropagation(node, winner);
+            endTime = System.nanoTime();
+            propagationTime += (endTime - startTime);   
         }
+
+        // System.out.format("%s took %s\n", "Select", selectTime); // Pretty fast here as well
+        // System.out.format("%s took %s\n", "Expansion", expansionTime); // Can be improved imo (took 0.16 secs in total)
+        // System.out.format("%s took %s\n", "Check winner", checkWinner); // Check winner is also fast and efficient
+        System.out.format("%s took %s\n", "Simulation", simulationTime); // This one is the slow animal
+        // System.out.format("%s took %s\n", "Propagation", propagationTime); // Propagation is very fast and efficient
+        
+        // System.out.println();
+        // System.out.format("%s took %s\n", "Unex Moves", gettingUnexploredMoves);
+        // System.out.format("%s took %s\n", "Next State", gettingNextState);
+        //System.out.format("%s took %s\n", "Available Moves", gettingAvailableMoves);
+
+        System.out.println();
+        System.out.format("%s took %s\n", "One Move Win", Hex.checkingOneMoveVictory); // heuristics only check when largest subset has certain size
+        System.out.format("%s took %s\n", "Two Move Win", Hex.checkingTwoMoveVictory); // This method seems to be taking up most of the time
+        // Adding minimum set size seems to have improved the algorithm by a lot
+        // System.out.format("%s took %s\n", "Enhanced", Hex.enhancedTime);
+        // System.out.format("%s took %s\n", "Non-Enhanced", Hex.nonEnhancedTime);
+
+        System.out.println();
+        System.out.format("%s took %s\n", "Total Next State", Hex.nextStateTime);
+        //System.out.format("%s took %s\n", "Disjoint Maps", Hex.disjointMapTime);
+        System.out.format("%s took %s\n", "Copy state", Hex.copyStateTime);
+        System.out.format("%s took %s\n", "Connect time", Hex.connectTime);
+
+        System.out.println();
+        System.out.println(i);
     }
 
     // Returns the best move from the tree based on the node that had the most simulations
@@ -82,11 +146,10 @@ class MonteCarlo {
             }
             if (childNode.numRollouts > mostMoves) {
                 bestMove = move;
-                System.out.println(((double) childNode.numWins)/childNode.numRollouts);
                 mostMoves = childNode.numRollouts;
+
             }
         }
-
         return bestMove;
     }
 
@@ -117,13 +180,24 @@ class MonteCarlo {
 
     // Phase 2
     public TreeNode expand(TreeNode node) {
+        long startTime = System.nanoTime();
         List<int[]> unexploredMoves = node.getUnexploredMoves();
+        long endTime = System.nanoTime();
+        gettingUnexploredMoves += endTime - startTime;
 
         int index = random.nextInt(unexploredMoves.size());
         int[] move = unexploredMoves.get(index);
 
+        startTime = System.nanoTime();
         Game childGame = game.getNextState(move);
+        endTime = System.nanoTime();
+        gettingNextState += endTime - startTime;
+
+        startTime = System.nanoTime();
         List<int[]> childUnexploredMoves = childGame.getAvailableMoves();
+        endTime = System.nanoTime();
+        gettingAvailableMoves += endTime - startTime;
+
         TreeNode childNode = new TreeNode(node, childGame, move, childUnexploredMoves);
         nodes.put(hash(childGame.getState()), childNode);
         node.children.put(TreeNode.hash(move), childNode);
@@ -136,13 +210,18 @@ class MonteCarlo {
     // So check if opponent is one move away from winning, if yes then block that move
     // And if you're one move away from winning then take that move
     public int simulate(TreeNode node) {
-        Game game = node.game;
+        int[][] nextState = Hex.copyState(node.game.getState());
+        int currentPlayer = node.game.currentPlayer;
+        int[] lastMove = new int[] {((Hex) node.game).lastMove[0], ((Hex) node.game).lastMove[1]};
+        Game game = new Hex(nextState, currentPlayer, lastMove, new HashMap<Integer,Set<Integer>>(((Hex) node.game).disjointSets));
         int winner = game.getWinner();
 
         while (winner == 0) {
-            List<int[]> availableMoves = game.getAvailableMoves();
-            int[] move = availableMoves.get(new Random().nextInt(availableMoves.size()));
-            game = game.getNextState(move);
+            List<int[]> availableMoves = game.getAvailableMoves(false);
+            // System.out.println(availableMoves.toString());
+            int[] move = availableMoves.get(random.nextInt(availableMoves.size()));
+            game.play(move);
+            ((Hex) game).connectWithNeighbors(move);
             winner = game.getWinner();
         }
 

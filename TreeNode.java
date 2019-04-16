@@ -21,13 +21,14 @@ public class TreeNode {
         this.game = game;
         this.availableMoves = availableMoves;
 
-        for(int[] move : availableMoves) {
+        for(int[] move : this.availableMoves) {
             children.put(hash(move), null);
         }
     }
 
     // Need this method because arrays can't be used reliably as keys
     public static Integer hash(int[] arr) {
+        // HASHCODES ARE CONFLICTED AHH
         return Arrays.hashCode(arr);
     }
 

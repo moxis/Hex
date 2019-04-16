@@ -1,7 +1,7 @@
 import java.util.*;
 
 public class Hex extends Game {
-    static int[][] DEFAULT_BOARD = new int[3][3];
+    static int[][] DEFAULT_BOARD = new int[11][11];
     Map<Integer, Set<Integer>> disjointSets = new HashMap<>();
     int[] lastMove;
 
@@ -18,15 +18,25 @@ public class Hex extends Game {
         this.disjointSets = disjointSets;
     }
 
+    static long disjointMapTime = 0;
     public static Map<Integer, Set<Integer>> copyDisjointMap(Map<Integer, Set<Integer>> disjointSets) {
+        long startTime = System.nanoTime();
         Map<Integer, Set<Integer>> newDisjointSets = new HashMap<>();
 
         for (Integer i : disjointSets.keySet()) {
-            Set<Integer> temp = new HashSet<Integer>();
-            temp.addAll(disjointSets.get(i));
-            newDisjointSets.put(i, temp);
+            if (!newDisjointSets.containsKey(i)) {
+                Set<Integer> temp = new HashSet<Integer>();
+                temp.addAll(disjointSets.get(i));
+                for(Integer j : temp) {
+                    if (!newDisjointSets.containsKey(j)) {
+                        newDisjointSets.put(j, temp);
+                    }   
+                }
+            }
         }
-
+        // Map<Integer, Set<Integer>> newDisjointSets = cloner.deepClone(disjointSets);
+        long endTime = System.nanoTime();
+        disjointMapTime += endTime - startTime;
         return newDisjointSets;
     }
 
@@ -55,15 +65,20 @@ public class Hex extends Game {
         p2Edges.add(left);
 
         MonteCarlo mcts = new MonteCarlo(hex);
+        MonteCarlo mcts2 = new MonteCarlo(hex);
         int winner = 0;
+        // mcts.search(hex.getState());
         while(winner == 0) {
             int[] move;
-            if (hex.currentPlayer == 1) {
-                int x = reader.nextInt();
+            if (hex.currentPlayer == -1) {
+                /*int x = reader.nextInt();
                 int y = reader.nextInt();
-                move = new int[] {x, y};
+                move = new int[] {x, y};*/
+                System.out.println("Kanishk");
+                mcts2.search(hex.getState());
+                move = mcts2.returnBestMove(hex.getState());
             } else {
-                System.out.println("my turn!");
+                System.out.println("Jessica");
                 mcts.search(hex.getState());
                 move = mcts.returnBestMove(hex.getState());
             }
@@ -73,17 +88,28 @@ public class Hex extends Game {
             hex.printBoard();
             hex.connectWithNeighbors(move);
             winner = hex.getWinner();
-            //System.out.println(winner);
+            // mcts.search(hex.getState());
+        }
+
+        System.out.print("Winner: ");
+        if(winner == 1) {
+            System.out.println("Jessica");
+        } else {
+            System.out.println("Kanishk");
         }
     }
 
+    static long connectTime = 0;
     public void connectWithNeighbors(int[] move) {
+        long startTime = System.nanoTime();
         int currentPlayer = this.getState()[move[0]][move[1]];
         for (int[] neighbour : this.getNeighbours(move)) {
             if (this.getState()[neighbour[0]][neighbour[1]] == currentPlayer) {
                 union(hash(move), hash(neighbour));
             }
         }
+        long endTime = System.nanoTime();
+        connectTime += endTime - startTime;
     }
 
     public void union(Integer a, Integer b) {
@@ -99,13 +125,156 @@ public class Hex extends Game {
     }
 
     public List<int[]> getAvailableMoves() {
-        List<int[]> possibleMoves = new ArrayList<>();
+        return this.getAvailableMoves(true);
+    }
 
+
+    static long checkingOneMoveVictory = 0;
+    static long checkingTwoMoveVictory = 0;
+    static long enhancedTime = 0;
+    static long nonEnhancedTime = 0;
+    
+    public List<int[]> getAvailableMoves(boolean enhanced) {
+        Set<int[]> possibleMoves = new HashSet<>();
         int[][] state = this.getState();
+
+        // Remove the neighbor thing because even tho it speeds it up, the AI is more dumb now
+        // Neighbours only good for checking victorious moves not for two step thinking moves
+        // For two step thinking moves, the second move should utilize neighbours
+        Set<int[]> currentNeighbours = this.getAllAvailableNeighbours(DEFAULT_BOARD.length / 2);
+
+        this.currentPlayer *= -1;
+        Set<int[]> theirNeighbours = this.getAllAvailableNeighbours(DEFAULT_BOARD.length / 2);
+        this.currentPlayer *= -1;
+
+        long startTime = System.nanoTime();
+        // Tiny version of minimax to add some heuristics
+        for(int[] move1 : currentNeighbours) { // Checking for victory
+            Game game1 = this.getNextState(move1);
+            if (game1.getWinner() != 0) {
+                long endTime = System.nanoTime();
+                checkingOneMoveVictory += endTime - startTime;
+                return new ArrayList<int[]>(Arrays.asList(move1));
+            }
+        }
+                        
+        this.currentPlayer *= -1; // Checking for enemy victory
+        for(int[] move1 : theirNeighbours) {
+            Game game1 = this.getNextState(move1);
+            if (game1.getWinner() != 0) {
+                this.currentPlayer *= -1;
+                long endTime = System.nanoTime();
+                checkingOneMoveVictory += endTime - startTime;
+                return new ArrayList<int[]>(Arrays.asList(move1));
+            }
+        }
+        this.currentPlayer *= -1;
+
+        long endTime = System.nanoTime();
+        checkingOneMoveVictory += endTime - startTime;
+        
+        startTime = System.nanoTime();
+        for(int[] move1 : currentNeighbours) {
+            Game game1 = this.getNextState(move1, false);
+            int winCount = 0; // If wincount is 2, then it's unblockable
+            for(int[] move2 : this.getNeighbours(move1)) { // getting neighbours helped reduce by 15 seconds
+                if (state[move2[0]][move2[1]] != 0) {
+                    Game game2 = game1.getNextState(move2);
+                    if (game2.getWinner() != 0) {
+                        winCount += 1;
+                    }
+
+                    if (winCount == 2) {
+                        endTime = System.nanoTime();
+                        checkingTwoMoveVictory += endTime - startTime;
+                        return new ArrayList<int[]>(Arrays.asList(move1));
+                    }
+                }
+            }
+        }
+
+        this.currentPlayer *= -1;
+        for(int[] move1 : theirNeighbours) {
+            Game game1 = this.getNextState(move1, false);
+            int winCount = 0; // If wincount is 2, then it's unblockable so block it
+            for(int[] move2 : this.getNeighbours(move1)) {
+                if (state[move2[0]][move2[1]] != 0) {
+                    Game game2 = game1.getNextState(move2);
+                    if (game2.getWinner() != 0) {
+                        winCount += 1;
+                    }
+                    if (winCount == 2) {
+                        this.currentPlayer *= -1;
+                        endTime = System.nanoTime();
+                        checkingTwoMoveVictory += endTime - startTime;
+                        return new ArrayList<int[]>(Arrays.asList(move1));
+                    }
+                }
+            }
+        }
+        this.currentPlayer *= -1;
+        endTime = System.nanoTime();
+        checkingTwoMoveVictory += endTime - startTime;
+
+        if(enhanced) {
+            startTime = System.nanoTime();
+            // Initial board search
+            for (int x = (state.length-1)/2 - 1; x <= (state.length-1)/2 + 1; x++) {
+                for (int y = (state[x].length-1)/2 - 1; y <= (state[x].length-1)/2 + 1; y++) {
+                    if(state[x][y] == 0) {
+                        possibleMoves.add(new int[] {x, y});
+                    }
+                }
+            }
+    
+            for (int[] tile : this.getTilesToCheck()) {
+                boolean match = false;
+                for (int[] move : possibleMoves) {
+                    if (tile[0] == move[0] && tile[1] == move[1]) {
+                        match = true;
+                    }
+                }
+    
+                if(!match) {
+                    possibleMoves.add(tile);
+                }
+            }
+
+            endTime = System.nanoTime();
+            enhancedTime += endTime - startTime;
+        } else {
+            startTime = System.nanoTime();
+            for (int x = 0; x < state.length; x++) {
+                for (int y = 0; y < state[x].length; y++) {
+                    if(state[x][y] == 0) {
+                        possibleMoves.add(new int[] {x, y});
+                    }
+                }
+            }
+            endTime = System.nanoTime();
+            nonEnhancedTime += endTime - startTime;
+        }
+
+
+        return new ArrayList<int[]>(possibleMoves);
+    }
+
+    public Set<int[]> getTilesToCheck() {
+        Set<int[]> possibleMoves = new HashSet<>();
+        int[][] state = this.getState();
+
         for (int x = 0; x < state.length; x++) {
             for (int y = 0; y < state[x].length; y++) {
-                if(state[x][y] == 0) {
-                    possibleMoves.add(new int[] {x, y});
+                if(state[x][y] != 0) {
+                    for (int i = x - 2; i <= x + 2; i++) {
+                        for (int j = y - 2; j <= y + 2; j++) {
+                            try {
+                                if(state[i][j] == 0) {
+                                    possibleMoves.add(new int[] {i, j});
+                                }
+                            } catch (ArrayIndexOutOfBoundsException e) {}
+                        }
+                    }
                 }
             }
         }
@@ -113,35 +282,76 @@ public class Hex extends Game {
         return possibleMoves;
     }
 
-    public int[][] copyState(int[][] state) {
-        int[][] newState = new int[state.length][state[0].length];
+    public Set<int[]> getAllAvailableNeighbours(int min) {
+        Set<int[]> allNeighbours = new HashSet<int[]>();
+        int[][] state = this.getState();
 
+        for(int x = 0; x < state.length; x++) {
+            for (int y = 0; y < state[x].length; y++) {
+                if (state[x][y] == this.currentPlayer) {
+                    if (this.disjointSets.get(hash(new int[] {x, y})).size() >= min) {
+                        for (int[] neighbour : this.getNeighbours(new int[] {x, y})) {
+                            if (state[neighbour[0]][neighbour[1]] == 0) {
+                                allNeighbours.add(neighbour);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return allNeighbours;
+    }
+
+    static long copyStateTime = 0;
+    public static int[][] copyState(int[][] state) {
+        long startTime = System.nanoTime();
+        int[][] newState = new int[state.length][state[0].length];
         for (int i = 0; i < state.length; i++) {
             for (int j = 0; j < state[0].length; j++) {
                 newState[i][j] = state[i][j];
             }
         }
-
+        long endTime = System.nanoTime();
+        copyStateTime += endTime - startTime;
         return newState;
     }
 
-    // HashMap of sets have to be passed as well
     public Game getNextState(int[] move) {
+        return this.getNextState(move, true);
+    }
+
+    static long nextStateTime = 0;
+
+    // HashMap of sets have to be passed as well
+    public Game getNextState(int[] move, boolean changePlayers) {
+        long startTime = System.nanoTime();
         int[][] nextState = copyState(this.getState());
         nextState[move[0]][move[1]] = currentPlayer;
-        Hex newGame = new Hex(nextState, currentPlayer * -1, move, copyDisjointMap(disjointSets));
+
+        int nextPlayer = currentPlayer;
+        if (changePlayers) {
+            nextPlayer *= -1;
+        }
+        Hex newGame = new Hex(nextState, nextPlayer, move, new HashMap<Integer,Set<Integer>>(disjointSets));
 
         Set<Integer> temp = new HashSet<Integer>();
         temp.add(hash(move));
         newGame.disjointSets.put(hash(move), temp);
         newGame.connectWithNeighbors(move);
 
+        long endTime = System.nanoTime();
+        nextStateTime += endTime - startTime;
         return newGame;
     }
 
     // Disjoint-set data structure
     // https://en.wikipedia.org/wiki/Disjoint-set_data_structure
     public int getWinner() {
+        if (lastMove == null) {
+            return 0;
+        }
+
         Set<Integer> blob = disjointSets.get(hash(lastMove));
         List<Set<Integer>> winningSet;
         if (currentPlayer == -1) {
@@ -151,7 +361,7 @@ public class Hex extends Game {
         }
 
         if (intersection(blob, winningSet.get(0)) && intersection(blob, winningSet.get(1))) {
-            return currentPlayer *= -1;
+            return currentPlayer * -1;
         }
 
         return 0;
