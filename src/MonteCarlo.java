@@ -71,14 +71,18 @@ class MonteCarlo {
     // Initiating the search method
     // ROBUST version
     static int i = 0;
+    @SuppressWarnings("unchecked")
     public void search(int[][] state) {
+        ThreadPoolExecutor executor = null;
         initializeNode(state);
 
-        // 5 seconds thinking time -> hex blitz mode
-        ThreadPoolExecutor executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
+        if(multithread) {
+            executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(4);
+        }
+
         long start = System.currentTimeMillis();
         i = 0;
-        while(false || (System.currentTimeMillis()-start) < thinkingTime) {
+        while(false || (System.currentTimeMillis() - start) < thinkingTime) {
             if(multithread) {
                 if(executor.getQueue().size() < 500) {
                     try {
@@ -108,9 +112,13 @@ class MonteCarlo {
                 }
             }
         }
-        executor.shutdownNow();
-        while (!executor.isTerminated()) {
+
+        if(multithread) {
+            executor.shutdownNow();
+            while (!executor.isTerminated()) {
+            }
         }
+
         System.out.println(i);
     }
 

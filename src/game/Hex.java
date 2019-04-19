@@ -472,11 +472,11 @@ public class Hex extends Game {
 
             for (int x = 0; x < BOARD_SIZE; x++) {
                 if(state[x][y] == 1) {
-                    System.out.print("\u001B[31m⬢\u001B[0m");
+                    System.out.print("\u001B[31m⬤\u001B[0m");
                 } else if (state[x][y] == -1) {
-                    System.out.print("\u001B[34m⬢\u001B[0m");
+                    System.out.print("\u001B[34m⬤\u001B[0m");
                 } else {
-                    System.out.print("⬢");
+                    System.out.print("⬤");
                 }
                 System.out.print(" ");
             }

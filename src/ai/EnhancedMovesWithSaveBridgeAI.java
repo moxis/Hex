@@ -70,7 +70,7 @@ public class EnhancedMovesWithSaveBridgeAI extends Hex {
         if (changePlayers) {
             nextPlayer *= -1;
         }
-        EnhancedMovesAI newGame = new EnhancedMovesAI(nextState, nextPlayer, move, new HashMap<Integer,Set<Integer>>(disjointSets));
+        EnhancedMovesWithSaveBridgeAI newGame = new EnhancedMovesWithSaveBridgeAI(nextState, nextPlayer, move, new HashMap<Integer,Set<Integer>>(disjointSets));
 
         Set<Integer> temp = new HashSet<Integer>();
         temp.add(hash(move));

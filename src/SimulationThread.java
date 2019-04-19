@@ -13,6 +13,7 @@ class SimulationThread implements Runnable {
       this.tree = tree;
    }
    
+   @SuppressWarnings("unchecked")
    public void run() {
       try {
          TreeNode node = tree.select(state);
@@ -25,6 +26,7 @@ class SimulationThread implements Runnable {
                winner = (int) results[0];
          }
          // Update the other nodes
+         
          tree.backpropagation(node, winner, (List<int[]>) results[1], (List<int[]>) results[2]);
          MonteCarlo.i += 1;
       } catch (Exception e) {
