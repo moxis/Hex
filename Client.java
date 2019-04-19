@@ -51,10 +51,13 @@ public class Client {
 			clientSocket = new Socket(hostName, portNumber);
 		    out = new PrintWriter(clientSocket.getOutputStream(), true);					//Sets up output
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));	//Sets up input
-			
-			if (in.readLine().equals("hello")){
-				System.out.println("Server says hello");
+			boolean done = false;
+			while (!done) {
 				out.println("hello");
+				if (in.readLine().equals("hello")){
+					out.println("new-game");
+
+				}
 			}
 		
 		} catch (ConnectException e){

@@ -44,15 +44,19 @@ public class Server {
 		    out = new PrintWriter(clientSocket.getOutputStream(), true);
 		    in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		    stdIn = new BufferedReader(new InputStreamReader(System.in));
-		    
-		    //Makes sure client is using the same protocols
-		    if(in.readLine().equals("hello")){
-				out.println("hello");
-				if(in.readLine().equals("New-game")) {
-					out.println("ready");
-					//Insert code to play the game (couldn't see how to turn the code from AI play into client vs server play)
+			
+			Boolean done = false;
+			while (!done) {
+				//System.out.println("HELP");
+				out.println("HEllO");
+				if(in.readLine().equals("hello")){
+					out.println("hello");
+					if(in.readLine().equals("New-game")) {
+						out.println("ready");
+						//Insert code to play the game (couldn't see how to turn the code from AI play into client vs server play)
 
-					//Insert code to choose if AI or player is playings
+						//Insert code to choose if AI or player is playings
+					}
 				}
 			}
 			
