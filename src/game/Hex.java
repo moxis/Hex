@@ -170,6 +170,93 @@ public class Hex extends Game {
         return bridges;
     }
 
+    public List<int[]> checkMinimax(Set<int[]> possibleMoves) {
+        int[][] state = this.getState();
+
+        // Remove the neighbor thing because even tho it speeds it up, the AI is more dumb now
+        // Neighbours only good for checking victorious moves not for two step thinking moves
+        // For two step thinking moves, the second move should utilize neighbours
+        Set<int[]> currentNeighbours = this.getAllAvailableNeighbours(BOARD_SIZE / 2);
+
+        this.currentPlayer *= -1;
+        Set<int[]> theirNeighbours = this.getAllAvailableNeighbours(BOARD_SIZE / 2);
+        this.currentPlayer *= -1;
+
+        // Tiny version of minimax to add some heuristics
+        for(int[] move1 : currentNeighbours) { // Checking for victory
+            Game game1 = this.getNextState(move1);
+            if (game1.getWinner() != 0) {
+                return new ArrayList<int[]>(Arrays.asList(move1));
+            }
+        }
+                        
+        this.currentPlayer *= -1; // Checking for enemy victory
+        for(int[] move1 : theirNeighbours) {
+            Game game1 = this.getNextState(move1);
+            if (game1.getWinner() != 0) {
+                this.currentPlayer *= -1;
+                return new ArrayList<int[]>(Arrays.asList(move1));
+            }
+        }
+        this.currentPlayer *= -1;
+
+        for(int[] move1 : possibleMoves) {
+            Game game1 = this.getNextState(move1, false);
+            int winCount = 0; // If wincount is 2, then it's unblockable
+            for(int[] move2 : possibleMoves) {
+                if (state[move2[0]][move2[1]] != 0 && move1 != move2) {
+                    Game game2 = game1.getNextState(move2);
+                    if (game2.getWinner() != 0) {
+                        winCount += 1;
+                    }
+
+                    if (winCount == 2) {
+                        return new ArrayList<int[]>(Arrays.asList(move1));
+                    }
+                }
+            }
+        }
+
+        this.currentPlayer *= -1;
+        for(int[] move1 : possibleMoves) {
+            Game game1 = this.getNextState(move1, false);
+            int winCount = 0; // If wincount is 2, then it's unblockable so block it
+            for(int[] move2 : possibleMoves) {
+                if (state[move2[0]][move2[1]] != 0 && move1 != move2) {
+                    Game game2 = game1.getNextState(move2);
+                    if (game2.getWinner() != 0) {
+                        winCount += 1;
+                    }
+                    if (winCount == 2) {
+                        this.currentPlayer *= -1;
+                        return new ArrayList<int[]>(Arrays.asList(move1));
+                    }
+                }
+            }
+        }
+        this.currentPlayer *= -1;
+
+        return null;
+    }
+
+
+    public Set<int[]> getEnhancedMoves() {
+        int[][] state = this.getState();
+        Set<int[]> possibleMoves = new HashSet<>();
+        // Initial board search only consider the initial 3x3 square in the middle of the board
+        for (int x = (BOARD_SIZE-1)/2 - 1; x <= (BOARD_SIZE-1)/2 + 1; x++) {
+            for (int y = (BOARD_SIZE-1)/2 - 1; y <= (BOARD_SIZE-1)/2 + 1; y++) {
+                if(state[x][y] == 0) {
+                    possibleMoves.add(new int[] {x, y});
+                }
+            }
+        }
+
+        possibleMoves.addAll(this.getTilesToCheck());
+
+        return possibleMoves;
+    }
+
     public List<int[]> getSmartMoves(boolean enhanced, int rollouts) {
         Set<int[]> possibleMoves = new HashSet<>();
         int[][] state = this.getState();
@@ -184,68 +271,10 @@ public class Hex extends Game {
 
         // Heavy playouts only applied on heavier nodes
         if(rollouts > 300) {
-            // Remove the neighbor thing because even tho it speeds it up, the AI is more dumb now
-            // Neighbours only good for checking victorious moves not for two step thinking moves
-            // For two step thinking moves, the second move should utilize neighbours
-            Set<int[]> currentNeighbours = this.getAllAvailableNeighbours(BOARD_SIZE / 2);
-
-            this.currentPlayer *= -1;
-            Set<int[]> theirNeighbours = this.getAllAvailableNeighbours(BOARD_SIZE / 2);
-            this.currentPlayer *= -1;
-
-            // Tiny version of minimax to add some heuristics
-            for(int[] move1 : currentNeighbours) { // Checking for victory
-                Game game1 = this.getNextState(move1);
-                if (game1.getWinner() != 0) {
-                    return new ArrayList<int[]>(Arrays.asList(move1));
-                }
+            List<int[]> temp = checkMinimax(possibleMoves);
+            if(temp != null) {
+                return temp;
             }
-                            
-            this.currentPlayer *= -1; // Checking for enemy victory
-            for(int[] move1 : theirNeighbours) {
-                Game game1 = this.getNextState(move1);
-                if (game1.getWinner() != 0) {
-                    this.currentPlayer *= -1;
-                    return new ArrayList<int[]>(Arrays.asList(move1));
-                }
-            }
-            this.currentPlayer *= -1;
-
-            for(int[] move1 : possibleMoves) {
-                Game game1 = this.getNextState(move1, false);
-                int winCount = 0; // If wincount is 2, then it's unblockable
-                for(int[] move2 : possibleMoves) {
-                    if (state[move2[0]][move2[1]] != 0 && move1 != move2) {
-                        Game game2 = game1.getNextState(move2);
-                        if (game2.getWinner() != 0) {
-                            winCount += 1;
-                        }
-
-                        if (winCount == 2) {
-                            return new ArrayList<int[]>(Arrays.asList(move1));
-                        }
-                    }
-                }
-            }
-
-            this.currentPlayer *= -1;
-            for(int[] move1 : possibleMoves) {
-                Game game1 = this.getNextState(move1, false);
-                int winCount = 0; // If wincount is 2, then it's unblockable so block it
-                for(int[] move2 : possibleMoves) {
-                    if (state[move2[0]][move2[1]] != 0 && move1 != move2) {
-                        Game game2 = game1.getNextState(move2);
-                        if (game2.getWinner() != 0) {
-                            winCount += 1;
-                        }
-                        if (winCount == 2) {
-                            this.currentPlayer *= -1;
-                            return new ArrayList<int[]>(Arrays.asList(move1));
-                        }
-                    }
-                }
-            }
-            this.currentPlayer *= -1;
 
             // Saving bridges if one is being attacked
             List<int[]> defend = this.getBridgeToDefend();
@@ -255,17 +284,7 @@ public class Hex extends Game {
         }
 
         if(enhanced) {
-            possibleMoves = new HashSet<>();
-            // Initial board search only consider the initial 3x3 square in the middle of the board
-            for (int x = (BOARD_SIZE-1)/2 - 1; x <= (BOARD_SIZE-1)/2 + 1; x++) {
-                for (int y = (BOARD_SIZE-1)/2 - 1; y <= (BOARD_SIZE-1)/2 + 1; y++) {
-                    if(state[x][y] == 0) {
-                        possibleMoves.add(new int[] {x, y});
-                    }
-                }
-            }
-    
-            possibleMoves.addAll(this.getTilesToCheck());
+            possibleMoves = getEnhancedMoves();
         }
 
         return new ArrayList<int[]>(possibleMoves);
@@ -411,7 +430,6 @@ public class Hex extends Game {
 
         if (y + 1 < BOARD_SIZE) {
             neighbours.add(new int[] {x, y + 1});
-
         }
 
         // 3
@@ -428,20 +446,48 @@ public class Hex extends Game {
 
     public void printBoard() {
         int[][] state = this.getState();
+        System.out.print("   ");
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            System.out.print("\u001B[31m" + i + "\u001B[0m ");
+        }
+        System.out.println();
+
+        System.out.print("    ");
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            System.out.print("\u001B[31m■■\u001B[0m");
+        }
+        System.out.println();
+        
         for (int y = 0; y < BOARD_SIZE; y++) {
+            if(y < 10) {
+                System.out.print("\u001B[34m" + y + "\u001B[0m  ");
+            } else {
+                System.out.print("\u001B[34m" + y + "\u001B[0m ");
+            }
+            
             for(int i = 0; i < y; i++) {
                 System.out.print(" ");
             }
+            System.out.print("\u001B[34m▮ \u001B[0m");
 
             for (int x = 0; x < BOARD_SIZE; x++) {
-                if(state[x][y] == -1) {
-                    System.out.print(2);
+                if(state[x][y] == 1) {
+                    System.out.print("\u001B[31m⬢\u001B[0m");
+                } else if (state[x][y] == -1) {
+                    System.out.print("\u001B[34m⬢\u001B[0m");
                 } else {
-                    System.out.print(state[x][y]);
+                    System.out.print("⬢");
                 }
                 System.out.print(" ");
             }
+            System.out.print("\u001B[34m▮\u001B[0m");
             System.out.println();
         }
+
+        System.out.print("              ");
+        for (int i = 0; i < BOARD_SIZE; i++) {
+            System.out.print("\u001B[31m■■\u001B[0m");
+        }
+        System.out.println();
     }
 }

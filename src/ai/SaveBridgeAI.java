@@ -23,7 +23,7 @@ public class SaveBridgeAI extends Hex {
 
     @Override
     public List<int[]> getSmartMoves() {
-        return this.getSmartMoves(false, Integer.MAX_VALUE);
+        return this.getSmartMoves(true, Integer.MAX_VALUE);
     }
 
     @Override

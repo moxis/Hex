@@ -33,16 +33,7 @@ public class EnhancedMovesAI extends Hex {
         int[][] state = this.getState();
 
         if(enhanced) {
-            // Initial board search only consider the initial 3x3 square in the middle of the board
-            for (int x = (BOARD_SIZE-1)/2 - 1; x <= (BOARD_SIZE-1)/2 + 1; x++) {
-                for (int y = (BOARD_SIZE-1)/2 - 1; y <= (BOARD_SIZE-1)/2 + 1; y++) {
-                    if(state[x][y] == 0) {
-                        possibleMoves.add(new int[] {x, y});
-                    }
-                }
-            }
-    
-            possibleMoves.addAll(this.getTilesToCheck());
+            possibleMoves = this.getEnhancedMoves();
         } else {
             for (int x = 0; x < BOARD_SIZE; x++) {
                 for (int y = 0; y < BOARD_SIZE; y++) {

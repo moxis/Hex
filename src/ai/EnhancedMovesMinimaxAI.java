@@ -3,13 +3,13 @@ package ai;
 import game.*;
 import java.util.*;
 
-public class EnhancedMovesWithSaveBridgeAI extends Hex {
+public class EnhancedMovesMinimaxAI extends Hex {
 
-    public EnhancedMovesWithSaveBridgeAI() {
+    public EnhancedMovesMinimaxAI() {
         super();
     }
 
-    public EnhancedMovesWithSaveBridgeAI(int[][] state, int currentPlayer, int[] lastMove, Map<Integer, Set<Integer>> disjointSets) {
+    public EnhancedMovesMinimaxAI(int[][] state, int currentPlayer, int[] lastMove, Map<Integer, Set<Integer>> disjointSets) {
         super(state, currentPlayer, lastMove, disjointSets);
     }
 
@@ -17,7 +17,7 @@ public class EnhancedMovesWithSaveBridgeAI extends Hex {
     public Game copyGame() {
         int[][] nextState = Hex.copyState(this.getState());
         int[] lastMove = new int[] {this.lastMove[0], this.lastMove[1]};
-        Game game = new EnhancedMovesWithSaveBridgeAI(nextState, this.currentPlayer, lastMove, new HashMap<Integer,Set<Integer>>(this.disjointSets));
+        Game game = new EnhancedMovesMinimaxAI(nextState, this.currentPlayer, lastMove, new HashMap<Integer,Set<Integer>>(this.disjointSets));
 
         return game;
     }
@@ -29,27 +29,26 @@ public class EnhancedMovesWithSaveBridgeAI extends Hex {
 
     @Override
     public List<int[]> getSmartMoves(boolean enhanced, int rollouts) {
-        if(rollouts > 300) {
-            // Saving bridges if one is being attacked
-            List<int[]> defend = this.getBridgeToDefend();
-            if(defend.size() != 0) {
-                return defend;
-            }
-        }
-        
         Set<int[]> possibleMoves = new HashSet<>();
         int[][] state = this.getState();
 
-        if(enhanced) {
-            possibleMoves = this.getEnhancedMoves();
-        } else {
-            for (int x = 0; x < BOARD_SIZE; x++) {
-                for (int y = 0; y < BOARD_SIZE; y++) {
-                    if(state[x][y] == 0) {
-                        possibleMoves.add(new int[] {x, y});
-                    }
+        for (int x = 0; x < BOARD_SIZE; x++) {
+            for (int y = 0; y < BOARD_SIZE; y++) {
+                if(state[x][y] == 0) {
+                    possibleMoves.add(new int[] {x, y});
                 }
             }
+        }
+
+        if(rollouts > 300) {
+            List<int[]> temp = this.checkMinimax(possibleMoves);
+            if(temp != null) {
+                return temp;
+            }
+        }
+
+        if(enhanced) {
+            possibleMoves = this.getEnhancedMoves();
         }
 
         return new ArrayList<int[]>(possibleMoves);
@@ -70,7 +69,7 @@ public class EnhancedMovesWithSaveBridgeAI extends Hex {
         if (changePlayers) {
             nextPlayer *= -1;
         }
-        EnhancedMovesAI newGame = new EnhancedMovesAI(nextState, nextPlayer, move, new HashMap<Integer,Set<Integer>>(disjointSets));
+        EnhancedMovesMinimaxAI newGame = new EnhancedMovesMinimaxAI(nextState, nextPlayer, move, new HashMap<Integer,Set<Integer>>(disjointSets));
 
         Set<Integer> temp = new HashSet<Integer>();
         temp.add(hash(move));

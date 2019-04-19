@@ -24,12 +24,12 @@ public class MinimaxHybridAI extends Hex {
 
     @Override
     public List<int[]> getSmartMoves() {
-        return this.getSmartMoves(false, Integer.MAX_VALUE);
+        return this.getSmartMoves(true, Integer.MAX_VALUE);
     }
 
     @Override
     public List<int[]> getSmartMoves(boolean enhanced, int rollouts) {
-        List<int[]> possibleMoves = new ArrayList<>();
+        Set<int[]> possibleMoves = new HashSet<>();
         int[][] state = this.getState();
 
         for (int x = 0; x < BOARD_SIZE; x++) {
@@ -41,71 +41,13 @@ public class MinimaxHybridAI extends Hex {
         }
         
         if(rollouts > 300) {
-            // Remove the neighbor thing because even tho it speeds it up, the AI is more dumb now
-            // Neighbours only good for checking victorious moves not for two step thinking moves
-            // For two step thinking moves, the second move should utilize neighbours
-            Set<int[]> currentNeighbours = this.getAllAvailableNeighbours(BOARD_SIZE / 2);
-
-            this.currentPlayer *= -1;
-            Set<int[]> theirNeighbours = this.getAllAvailableNeighbours(BOARD_SIZE / 2);
-            this.currentPlayer *= -1;
-
-            // Tiny version of minimax to add some heuristics
-            for(int[] move1 : currentNeighbours) { // Checking for victory
-                Game game1 = this.getNextState(move1);
-                if (game1.getWinner() != 0) {
-                    return new ArrayList<int[]>(Arrays.asList(move1));
-                }
+            List<int[]> temp = this.checkMinimax(possibleMoves);
+            if(temp != null) {
+                return temp;
             }
-                            
-            this.currentPlayer *= -1; // Checking for enemy victory
-            for(int[] move1 : theirNeighbours) {
-                Game game1 = this.getNextState(move1);
-                if (game1.getWinner() != 0) {
-                    this.currentPlayer *= -1;
-                    return new ArrayList<int[]>(Arrays.asList(move1));
-                }
-            }
-            this.currentPlayer *= -1;
-
-            for(int[] move1 : possibleMoves) {
-                Game game1 = this.getNextState(move1, false);
-                int winCount = 0; // If wincount is 2, then it's unblockable
-                for(int[] move2 : possibleMoves) {
-                    if (state[move2[0]][move2[1]] != 0 && move1 != move2) {
-                        Game game2 = game1.getNextState(move2);
-                        if (game2.getWinner() != 0) {
-                            winCount += 1;
-                        }
-
-                        if (winCount == 2) {
-                            return new ArrayList<int[]>(Arrays.asList(move1));
-                        }
-                    }
-                }
-            }
-
-            this.currentPlayer *= -1;
-            for(int[] move1 : possibleMoves) {
-                Game game1 = this.getNextState(move1, false);
-                int winCount = 0; // If wincount is 2, then it's unblockable so block it
-                for(int[] move2 : possibleMoves) {
-                    if (state[move2[0]][move2[1]] != 0 && move1 != move2) {
-                        Game game2 = game1.getNextState(move2);
-                        if (game2.getWinner() != 0) {
-                            winCount += 1;
-                        }
-                        if (winCount == 2) {
-                            this.currentPlayer *= -1;
-                            return new ArrayList<int[]>(Arrays.asList(move1));
-                        }
-                    }
-                }
-            }
-            this.currentPlayer *= -1;
         }
 
-        return possibleMoves;
+        return new ArrayList<int[]>(possibleMoves);
     }
 
     @Override
