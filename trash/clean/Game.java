@@ -1,3 +1,4 @@
+import java.io.Serializable;
 import java.util.*;
 
 public abstract class Game {
@@ -12,7 +13,7 @@ public abstract class Game {
     // Return a list of available moves
     public abstract List<int[]> getAvailableMoves();
 
-    public abstract List<int[]> getAvailableMoves(boolean enhanced);
+    public abstract List<int[]> getAvailableMoves(boolean enhanced, int rollouts);
 
     // Returns a new game object updated with new state
     public abstract Game getNextState(int[] move, boolean changePlayer);

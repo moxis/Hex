@@ -1,4 +1,7 @@
 import java.util.*;
+import java.io.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.zip.*;
 
 public class Hex extends Game {
     static int[][] DEFAULT_BOARD = new int[11][11];
@@ -64,8 +67,11 @@ public class Hex extends Game {
         p2Edges.add(right);
         p2Edges.add(left);
 
-        MonteCarlo mcts = new MonteCarlo(hex);
+        MonteCarlo mcts = new MonteCarlo(hex, loadTree("mcts2.ser"));
+        System.out.println(mcts.nodes.size());
         MonteCarlo mcts2 = new MonteCarlo(hex);
+        System.out.println(mcts2.nodes.size());
+
         int winner = 0;
         // mcts.search(hex.getState());
         while(winner == 0) {
@@ -74,16 +80,20 @@ public class Hex extends Game {
                 /*int x = reader.nextInt();
                 int y = reader.nextInt();
                 move = new int[] {x, y};*/
-                System.out.println("Kanishk");
-                mcts2.search(hex.getState());
-                move = mcts2.returnBestMove(hex.getState());
+                System.out.println("Joann");
+                // mcts2.search(hex.getState());
+                // move = mcts2.returnBestMove(hex.getState());
+                List<int[]> moves = hex.getAvailableMoves(false);
+                Random random = new Random();
+                int i = random.nextInt(moves.size());
+                move = moves.get(i);
             } else {
                 System.out.println("Jessica");
                 mcts.search(hex.getState());
                 move = mcts.returnBestMove(hex.getState());
             }
-            System.out.println(move[0]);
-            System.out.println(move[1]);
+            // System.out.println(move[0]);
+            // System.out.println(move[1]);
             hex.play(move);
             hex.printBoard();
             hex.connectWithNeighbors(move);
@@ -95,8 +105,45 @@ public class Hex extends Game {
         if(winner == 1) {
             System.out.println("Jessica");
         } else {
-            System.out.println("Kanishk");
+            System.out.println("Joann");
         }
+
+        if (mcts.bootstrapNodes == null) {
+            saveTreeToFile(mcts.nodes);
+        } else {
+            mcts.bootstrapNodes.putAll(mcts.nodes);
+            saveTreeToFile(mcts.bootstrapNodes);
+        }
+
+    }
+
+    public static void saveTreeToFile(Object obj) {
+        try {
+            FileOutputStream fileOut = new FileOutputStream("mcts2.ser");
+            ObjectOutputStream out = new ObjectOutputStream(new GZIPOutputStream(fileOut));
+            out.writeObject(obj);
+            out.close();
+            fileOut.close();
+            System.out.println("Serialized data is saved in mcts.ser");
+         } catch (IOException i) {
+            i.printStackTrace();
+         }
+    }
+
+    public static ConcurrentHashMap loadTree(String fileName) {
+        System.out.println("Loading mcts.ser");
+        ConcurrentHashMap e = null;
+        try {
+            FileInputStream fileIn = new FileInputStream(fileName);
+            ObjectInputStream in = new ObjectInputStream(new GZIPInputStream(fileIn));
+            e = (ConcurrentHashMap) in.readObject();
+            in.close();
+            fileIn.close();
+        } catch (Exception i) {
+            i.printStackTrace();
+        }
+
+        return e;
     }
 
     static long connectTime = 0;
@@ -138,6 +185,14 @@ public class Hex extends Game {
         Set<int[]> possibleMoves = new HashSet<>();
         int[][] state = this.getState();
 
+        for (int x = 0; x < state.length; x++) {
+            for (int y = 0; y < state[x].length; y++) {
+                if(state[x][y] == 0) {
+                    possibleMoves.add(new int[] {x, y});
+                }
+            }
+        }
+
         // Remove the neighbor thing because even tho it speeds it up, the AI is more dumb now
         // Neighbours only good for checking victorious moves not for two step thinking moves
         // For two step thinking moves, the second move should utilize neighbours
@@ -174,11 +229,11 @@ public class Hex extends Game {
         checkingOneMoveVictory += endTime - startTime;
         
         startTime = System.nanoTime();
-        for(int[] move1 : currentNeighbours) {
+        for(int[] move1 : possibleMoves) {
             Game game1 = this.getNextState(move1, false);
             int winCount = 0; // If wincount is 2, then it's unblockable
-            for(int[] move2 : this.getNeighbours(move1)) { // getting neighbours helped reduce by 15 seconds
-                if (state[move2[0]][move2[1]] != 0) {
+            for(int[] move2 : possibleMoves) { // getting neighbours helped reduce by 15 seconds
+                if (state[move2[0]][move2[1]] != 0 && move1 != move2) {
                     Game game2 = game1.getNextState(move2);
                     if (game2.getWinner() != 0) {
                         winCount += 1;
@@ -194,11 +249,11 @@ public class Hex extends Game {
         }
 
         this.currentPlayer *= -1;
-        for(int[] move1 : theirNeighbours) {
+        for(int[] move1 : possibleMoves) {
             Game game1 = this.getNextState(move1, false);
             int winCount = 0; // If wincount is 2, then it's unblockable so block it
-            for(int[] move2 : this.getNeighbours(move1)) {
-                if (state[move2[0]][move2[1]] != 0) {
+            for(int[] move2 : possibleMoves) {
+                if (state[move2[0]][move2[1]] != 0 && move1 != move2) {
                     Game game2 = game1.getNextState(move2);
                     if (game2.getWinner() != 0) {
                         winCount += 1;
@@ -217,6 +272,7 @@ public class Hex extends Game {
         checkingTwoMoveVictory += endTime - startTime;
 
         if(enhanced) {
+            possibleMoves = new HashSet<>();
             startTime = System.nanoTime();
             // Initial board search
             for (int x = (state.length-1)/2 - 1; x <= (state.length-1)/2 + 1; x++) {
@@ -232,6 +288,7 @@ public class Hex extends Game {
                 for (int[] move : possibleMoves) {
                     if (tile[0] == move[0] && tile[1] == move[1]) {
                         match = true;
+                        break;
                     }
                 }
     
@@ -243,18 +300,8 @@ public class Hex extends Game {
             endTime = System.nanoTime();
             enhancedTime += endTime - startTime;
         } else {
-            startTime = System.nanoTime();
-            for (int x = 0; x < state.length; x++) {
-                for (int y = 0; y < state[x].length; y++) {
-                    if(state[x][y] == 0) {
-                        possibleMoves.add(new int[] {x, y});
-                    }
-                }
-            }
-            endTime = System.nanoTime();
-            nonEnhancedTime += endTime - startTime;
+            return new ArrayList<int[]>(possibleMoves);
         }
-
 
         return new ArrayList<int[]>(possibleMoves);
     }
