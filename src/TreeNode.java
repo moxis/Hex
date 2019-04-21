@@ -1,13 +1,12 @@
-import java.io.Serializable;
 import java.util.*;
 import game.*;
 
 public class TreeNode {
     // Classic tree node properties
-    transient TreeNode parent = null;
-    transient Map<Integer, TreeNode> children = new HashMap<Integer, TreeNode>();
+    TreeNode parent = null;
+    Map<Integer, TreeNode> children = new HashMap<Integer, TreeNode>();
 
-    transient int numberOfChildren;
+    int numberOfChildren;
 
     // To calculate UCB1
     // Only these stats and available moves will be saved so that we won't have to recompute them
@@ -17,10 +16,11 @@ public class TreeNode {
     int numRaveRollouts = 0;
     int numRaveWins = 0;
 
-    transient Game game;
-    transient int[] action;
+    Game game;
+    int[] action;
 
-    static double explorationParam = 2;
+    static double explorationParam = 0;
+    static double raveConstant = 24000.0;
     List<int[]> availableMoves;
 
     TreeNode(TreeNode parent, Game game, int[] action, List<int[]> availableMoves) {
@@ -48,12 +48,11 @@ public class TreeNode {
 
     public double getUCB1(boolean rave) {
         if(rave) {
-            double raveConstant = 300.0;
-            double exploration = 2.0;
-
             double alpha = Math.max(0, (raveConstant - (double) this.numRollouts) / raveConstant);
-            return (((double) this.numWins) * (1-alpha) / this.numRollouts) + (((double) this.numRaveWins) * alpha / this.numRaveRollouts)
-            + Math.sqrt(exploration * Math.log(parent.numRollouts) / numRollouts); 
+            double score = (((double) this.numWins) * (1-alpha) / this.numRollouts) + (((double) this.numRaveWins) * alpha / this.numRaveRollouts); 
+            if (!Double.isNaN(score)) {
+                return score;
+            }
         }
 
         return ((double) numWins) / numRollouts + Math.sqrt(explorationParam * Math.log(parent.numRollouts) / numRollouts);

@@ -2,16 +2,16 @@ import java.util.*;
 import game.*;
 import ai.*;
 
-// https://challonge.com/tournaments/bracket_generator?ref=Fw8r6YRzll
+// https://challonge.com/us23w52p
 public class Main {
     public static void main(String[] args) {
         Hex.initializeWinConditions();
 
-        NoHeuristicsAI hex = new NoHeuristicsAI();
-        SaveBridgeWithMinimaxAI hex2 = new SaveBridgeWithMinimaxAI();
+        NoHeuristicsAIwithSaveBridgeSimulation hex = new NoHeuristicsAIwithSaveBridgeSimulation();
+        NoHeuristicsAIwithSaveBridgeSimulation hex2 = new NoHeuristicsAIwithSaveBridgeSimulation();
 
-        MonteCarlo mcts = new MonteCarlo(hex, true, false, 5000);
-        MonteCarlo mcts2 = new MonteCarlo(hex2, true, false, 5000);
+        MonteCarlo mcts = new MonteCarlo(hex, true, true, 2000);
+        MonteCarlo mcts2 = new MonteCarlo(hex2, true, true, 2000);
 
         int winner = 0;
         int start;
@@ -26,10 +26,12 @@ public class Main {
         while(winner == 0) {
             int[] move;
             if (hex2.currentPlayer == start) {
+                // TreeNode.raveConstant = 24000.0;
                 System.out.println(hex2.getClass().getName());
                 mcts2.search(hex2.getState());
                 move = mcts2.returnBestMove(hex2.getState());
             } else {
+                // TreeNode.raveConstant = 12000.0;
                 System.out.println(hex.getClass().getName());
                 mcts.search(hex.getState());
                 move = mcts.returnBestMove(hex.getState());

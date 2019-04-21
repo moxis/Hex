@@ -295,7 +295,7 @@ public class Hex extends Game {
         int[][] state = this.getState();
 
         for (int x = 0; x < BOARD_SIZE; x++) {
-            for (int y = 0; y < state[x].length; y++) {
+            for (int y = 0; y < BOARD_SIZE; y++) {
                 if(state[x][y] != 0) {
                     for (int i = x - 3; i <= x + 3; i++) {
                         for (int j = y - 3; j <= y + 3; j++) {
@@ -318,7 +318,7 @@ public class Hex extends Game {
         int[][] state = this.getState();
 
         for(int x = 0; x < BOARD_SIZE; x++) {
-            for (int y = 0; y < state[x].length; y++) {
+            for (int y = 0; y < BOARD_SIZE; y++) {
                 if (state[x][y] == this.currentPlayer) {
                     if (this.disjointSets.get(hash(new int[] {x, y})).size() >= min) {
                         for (int[] neighbour : this.getNeighbours(new int[] {x, y})) {
@@ -393,20 +393,22 @@ public class Hex extends Game {
         return false;
     }
 
-    // TODO: add move validations
     public void play(int[] move) {
         int[][] state = this.getState();
-        if (state[move[0]][move[1]] == 0 ) {
-            state[move[0]][move[1]] = currentPlayer;
+        try {
+            if (state[move[0]][move[1]] == 0 ) {
+                state[move[0]][move[1]] = currentPlayer;
+    
+                Set<Integer> temp = new HashSet<Integer>();
+                temp.add(hash(move));
+                disjointSets.put(hash(move), temp);
+                lastMove = move;
+                currentPlayer *= -1;
+            } else {
+                System.out.println("Invalid move.. Please try again");
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {System.out.println("Invalid move.. Please try again");}
 
-            Set<Integer> temp = new HashSet<Integer>();
-            temp.add(hash(move));
-            disjointSets.put(hash(move), temp);
-            lastMove = move;
-            currentPlayer *= -1;
-        } else {
-            System.out.println("Invalid move.. Please try again");
-        }
     }
 
     public List<int[]> getNeighbours(int[] move) {

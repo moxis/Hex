@@ -1,3 +1,3 @@
-for i in $(seq 1 100); do
+for i in $(seq 1 10); do
     java Main
 done
