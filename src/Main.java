@@ -12,9 +12,10 @@ public class Main {
     public static void main(String[] args) {
         Hex.initializeWinConditions();
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
-
+        boolean ai = false;
         System.out.println("Would you like local play (1) or server play (2)?");
         String entry = "";
+        String str = "";
 
         try {
             entry = stdIn.readLine();
@@ -34,7 +35,7 @@ public class Main {
         }
         else {
             String hostName = "";
-            int portNumber = 9128;
+            int portNumber = 5000;
 
             InetAddress IP;	//Used to find user's IP address
             try {
@@ -46,23 +47,39 @@ public class Main {
                 e.printStackTrace();
             }
 
+            System.out.println("Type 1 to play manually, type 2 for AI player");
+            try {
+                while(str.equals("")) {
+                    str = stdIn.readLine();
+                    while (!(str.equals("1") || str.equals("2"))) {
+                        System.out.println("Try Again");
+                        str = stdIn.readLine();
+                    }
+                }
+            } catch (NullPointerException e) {
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (str.equals("2")) {
+                ai = true;
+            }
+
             //Lets user decide whether they are acting as a server or a client
             System.out.println("Type 1 for a server. Type 2 for a client");
-            String str = "";
-                try {
-                    str = stdIn.readLine();
-                    while(!(str.equals("1")||str.equals("2"))){
-                        System.out.println("Try Again");
+            try {
+                str = stdIn.readLine();
+                while(!(str.equals("1")||str.equals("2"))){
+                    System.out.println("Try Again");
 
-                    str = stdIn.readLine();
-                    }
-                } catch (NullPointerException e){
-                } catch (IOException e) {
-                    e.printStackTrace();
+                str = stdIn.readLine();
+                }
+            } catch (NullPointerException e){
+            } catch (IOException e) {
+                e.printStackTrace();
             }
             //Sets up server
             if(str.equals("1")){
-                Server serv = new Server(hostName, portNumber);
+                Server serv = new Server(hostName, portNumber, ai);
                 serv.communicate();
             }
             //Sets up client
@@ -71,7 +88,7 @@ public class Main {
                 System.out.println("Please type in the IP Address that you want to compete against.");
                 try {
                     String ipAddress = getIPAddress();
-                    Client client = new Client(ipAddress, portNumber);
+                    Client client = new Client(ipAddress, portNumber, ai);
                     client.communicate();
                 } catch (IOException e) {
                     e.printStackTrace();

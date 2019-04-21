@@ -5,6 +5,10 @@ import game.*;
 
 public class NoHeuristicsAIwithSaveBridgeSimulation extends Hex {
 
+    public NoHeuristicsAIwithSaveBridgeSimulation(int[][] state, int currentPlayer) {
+        super(state, currentPlayer);
+    }
+
     public NoHeuristicsAIwithSaveBridgeSimulation() {
         super();
     }

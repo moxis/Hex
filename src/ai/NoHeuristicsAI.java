@@ -5,6 +5,10 @@ import game.*;
 
 public class NoHeuristicsAI extends Hex {
 
+    public NoHeuristicsAI(int[][] state, int currentPlayer) {
+        super(state, currentPlayer);
+    }
+
     public NoHeuristicsAI() {
         super();
     }

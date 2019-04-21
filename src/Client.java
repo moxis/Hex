@@ -18,10 +18,12 @@ public class Client {
 	BufferedReader in;
 	BufferedReader stdIn;
 	PrintWriter out;
+	boolean ai = false;
 
-	public Client(String hostName, int portNumber) {
+	public Client(String hostName, int portNumber, boolean ai) {
 		this.hostName = hostName;
 		this.portNumber = portNumber;
+		this.ai = ai;
 	}
 
 	// Connects user to servers and starts game.
@@ -37,8 +39,7 @@ public class Client {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-		} finally {
-		}
+		} finally {}
 	}
 
 	public void connect() throws NullPointerException {
@@ -52,7 +53,7 @@ public class Client {
 			out.println("hello");
 			if (in.readLine().equals("hello")) {
 				System.out.println("hello");
-				out.println("new-game");
+				out.println("newgame");
 				if (in.readLine().equals("ready")) {
 					System.out.println("ready");
 					play(out, in, stdIn);
@@ -60,7 +61,7 @@ public class Client {
 			}
 
 		} catch (ConnectException e) {
-			System.out.println("There was no server availible. Press enter to try again");
+			System.out.println("There was no server available. Press enter to try again");
 			try {
 				stdIn.readLine();
 				connect();
@@ -73,12 +74,13 @@ public class Client {
 	}
 
 	public void play(PrintWriter out, BufferedReader in, BufferedReader stdIn) {
-		NoHeuristicsAIwithSaveBridgeSimulation hex = new NoHeuristicsAIwithSaveBridgeSimulation();
-		MonteCarlo mcts = new MonteCarlo(hex, true, true, 2000);
+		NoHeuristicsAI hex = null;
+
+		String str = "";
 		boolean done = false;
 
 		System.out.println("Type 1 to play first, type 2 to pass");
-		String str = "";
+		
 		try {
 			str = stdIn.readLine();
 			while (!(str.equals("1") || str.equals("2"))) {
@@ -93,25 +95,39 @@ public class Client {
 		// true represents client, false server
 		boolean playerToPlay = false;
 		if (str.equals("1")) {
+			hex = new NoHeuristicsAI(Hex.DEFAULT_BOARD, -1);
 			playerToPlay = true;
 			out.println("");
 		}
 		else {
+			hex = new NoHeuristicsAI();
 			out.println("pass");
 		}
 		
+		MonteCarlo mcts = new MonteCarlo(hex, true, true, 2000);
 		try {
+			String coord = "";
+			int[] move = null;
+			int x_value;
+			int y_value;
 			while (!done) {
 				if (playerToPlay) {
-					System.out.println("Please enter the x position to be placed at");
-					int x_value = Integer.parseInt(stdIn.readLine());
+					if(!ai) {
+						System.out.println("Please enter the x position to be placed at");
+						x_value = Integer.parseInt(stdIn.readLine());
 
-					System.out.println("Please enter the y position to be placed at");
-					int y_value = Integer.parseInt(stdIn.readLine());
+						System.out.println("Please enter the y position to be placed at");
+						y_value = Integer.parseInt(stdIn.readLine());
+						move = new int[] {x_value, y_value};
+					} else {
+						mcts.search(hex.getState());
+						move = mcts.returnBestMove(hex.getState());
 
-					String coord = ("(" + x_value + "," + y_value + ");");
-					int[] move = new int[] {x_value, y_value};
+						x_value = move[0];
+						y_value = move[1];
+					}
 
+					coord = ("(" + x_value + "," + y_value + ");");
 					out.println(coord);
 					hex.play(move);
 					hex.printBoard();
@@ -124,13 +140,13 @@ public class Client {
 				}
 				else {
 					System.out.println("Waiting for opponents move...");
-					String coord = in.readLine();
+					coord = in.readLine();
 					System.out.println(coord);
-					String[] axis = coord.split(",");
+					String[] axis = coord.replace(" ", "").split(",");
 					
-					int x_value = Integer.parseInt(axis[0].replace("(", ""));
-					int y_value = Integer.parseInt(axis[1].replace(");", ""));
-					int[] move = new int[] {x_value, y_value};
+					x_value = Integer.parseInt(axis[0].replace("(", ""));
+					y_value = Integer.parseInt(axis[1].replace(");", ""));
+					move = new int[] {x_value, y_value};
 					hex.play(move);
 					hex.printBoard();
 					hex.connectWithNeighbors(move);
@@ -144,7 +160,15 @@ public class Client {
 			}
 		} catch (IOException e) {
 			System.out.println("Something went wrong while reading in coords");
+		} finally {
+			// System.out.println("you-win; bye");
+			try {
+				String finalMessage = in.readLine();
+				if(finalMessage != null) {
+					System.out.println(finalMessage);
+				}
+				clientSocket.close();
+			} catch(IOException e) {}
 		}
-
 	}
 }

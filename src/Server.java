@@ -16,10 +16,12 @@ public class Server {
 	BufferedReader in;
 	BufferedReader stdIn;
 	PrintWriter out;
+	boolean ai = false;
 
-	public Server(String hostName, int portNumber) {
+	public Server(String hostName, int portNumber, boolean ai) {
 		this.hostName = hostName;
 		this.portNumber = portNumber;
+		this.ai = ai;
 	}
 
 	// Connects user to client and starts game.
@@ -43,7 +45,7 @@ public class Server {
 			in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 			stdIn = new BufferedReader(new InputStreamReader(System.in));
 
-			Boolean done = false;
+			boolean done = false;
 			while (!done) {
 				if (in.readLine().equals("hello")) {
 					out.println("hello");
@@ -70,48 +72,63 @@ public class Server {
 	}
 
 	public void play(PrintWriter out, BufferedReader in, BufferedReader stdIn) {
-		NoHeuristicsAIwithSaveBridgeSimulation hex = new NoHeuristicsAIwithSaveBridgeSimulation();
+		NoHeuristicsAI hex = null;
+
 		boolean done = false;
 		boolean playerToPlay = false;
 
 		try {
 			if (in.readLine().equals("pass")) {
+				hex = new NoHeuristicsAI();
 				playerToPlay = false;
 			} else {
+				hex = new NoHeuristicsAI(Hex.DEFAULT_BOARD, -1);
 				playerToPlay = true;
 			}
 			
+			MonteCarlo mcts = new MonteCarlo(hex, true, true, 2000);
+
+			String coord = "";
+			int[] move = null;
+			int x_value;
+			int y_value;
+
 			while (!done) {
 				if (!playerToPlay) {
-					System.out.println("Please enter the x position to be placed at");
-					int x_value = Integer.parseInt(stdIn.readLine());
+					if(!ai) {
+						System.out.println("Please enter the x position to be placed at");
+						x_value = Integer.parseInt(stdIn.readLine());
 
-					System.out.println("Please enter the y position to be placed at");
-					int y_value = Integer.parseInt(stdIn.readLine());
+						System.out.println("Please enter the y position to be placed at");
+						y_value = Integer.parseInt(stdIn.readLine());
+						move = new int[] {x_value, y_value};
+					} else {
+						mcts.search(hex.getState());
+						move = mcts.returnBestMove(hex.getState());
 
-					String coord = ("(" + x_value + "," + y_value + ");");
+						x_value = move[0];
+						y_value = move[1];
+					}
 
-					int[] move = new int[] {x_value, y_value};
-
+					coord = ("(" + x_value + "," + y_value + ");");
 					out.println(coord);
 					hex.play(move);
 					hex.printBoard();
 					hex.connectWithNeighbors(move);
 					if(hex.getWinner() != 0) {
 						done = true;
-						out.println("you-win; bye");
 					}
 
 					playerToPlay = true;
 				} else {
 					System.out.println("Waiting for opponents move...");
-					String coord = in.readLine();
+					coord = in.readLine();
 					System.out.println(coord);
-					String[] axis = coord.split(",");
+					String[] axis = coord.replace(" ", "").split(",");
 					
-					int x_value = Integer.parseInt(axis[0].replace("(", ""));
-					int y_value = Integer.parseInt(axis[1].replace(");", ""));
-					int[] move = new int[] {x_value, y_value};
+					x_value = Integer.parseInt(axis[0].replace("(", ""));
+					y_value = Integer.parseInt(axis[1].replace(");", ""));
+					move = new int[] {x_value, y_value};
 					hex.play(move);
 					hex.printBoard();
 					hex.connectWithNeighbors(move);
@@ -125,6 +142,16 @@ public class Server {
 			}
 		} catch (IOException e) {
 			System.out.println("Something went wrong while reading in coords");
+		} finally {
+			// System.out.println("you-win; bye");
+			try {
+				String finalMessage = in.readLine();
+				if(finalMessage != null) {
+					System.out.println(finalMessage);
+				}
+				clientSocket.close();
+			} catch(IOException e) {}
+			
 		}
 
 	}

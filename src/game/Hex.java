@@ -415,7 +415,7 @@ public class Hex extends Game {
         List<int[]> neighbours = new ArrayList<int[]>();
         int x = move[0];
         int y = move[1];
-
+        /*
         // 1
         if (x - 1 >= 0) {
             neighbours.add(new int[] {x - 1, y});
@@ -441,20 +441,45 @@ public class Hex extends Game {
 
         if (x + 1 < BOARD_SIZE && y - 1 >= 0) {
             neighbours.add(new int[] {x + 1, y - 1});
+        }*/
+
+        if (x - 1 >= 0 && y - 1 >= 0) {
+            neighbours.add(new int[] {x - 1, y - 1});
         }
+
+        if (y - 1 >= 0) {
+            neighbours.add(new int[] {x, y - 1});
+        }
+
+        if (x + 1 < BOARD_SIZE) {
+            neighbours.add(new int[] {x + 1, y});
+        }
+
+        if (x + 1 < BOARD_SIZE && y + 1 < BOARD_SIZE) {
+            neighbours.add(new int[] {x + 1, y + 1});
+        }
+
+        if (y + 1 < BOARD_SIZE) {
+            neighbours.add(new int[] {x, y + 1});
+        }
+
+        if (x - 1 >= 0) {
+            neighbours.add(new int[] {x - 1, y});
+        }
+
 
         return neighbours;
     }
 
     public void printBoard() {
         int[][] state = this.getState();
-        System.out.print("   ");
+        System.out.print("                ");
         for (int i = 0; i < BOARD_SIZE; i++) {
             System.out.print("\u001B[31m" + i + "\u001B[0m ");
         }
         System.out.println();
 
-        System.out.print("    ");
+        System.out.print("                ");
         for (int i = 0; i < BOARD_SIZE; i++) {
             System.out.print("\u001B[31m■■\u001B[0m");
         }
@@ -467,7 +492,7 @@ public class Hex extends Game {
                 System.out.print("\u001B[34m" + y + "\u001B[0m ");
             }
             
-            for(int i = 0; i < y; i++) {
+            for(int i = y; i < BOARD_SIZE; i++) {
                 System.out.print(" ");
             }
             System.out.print("\u001B[34m▮ \u001B[0m");
@@ -486,7 +511,7 @@ public class Hex extends Game {
             System.out.println();
         }
 
-        System.out.print("              ");
+        System.out.print("      ");
         for (int i = 0; i < BOARD_SIZE; i++) {
             System.out.print("\u001B[31m■■\u001B[0m");
         }

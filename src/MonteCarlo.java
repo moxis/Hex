@@ -120,6 +120,7 @@ class MonteCarlo {
             }
         }
 
+        System.out.print("# of simulations: ");
         System.out.println(i);
     }
 
