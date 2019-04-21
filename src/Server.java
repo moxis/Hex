@@ -1,4 +1,3 @@
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -6,6 +5,8 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import ai.*;
+import game.*;
 
 public class Server {
 	ServerSocket serverSocket = null;
@@ -69,32 +70,57 @@ public class Server {
 	}
 
 	public void play(PrintWriter out, BufferedReader in, BufferedReader stdIn) {
+		NoHeuristicsAIwithSaveBridgeSimulation hex = new NoHeuristicsAIwithSaveBridgeSimulation();
 		boolean done = false;
 		boolean playerToPlay = false;
 
 		try {
 			if (in.readLine().equals("pass")) {
 				playerToPlay = false;
+			} else {
+				playerToPlay = true;
 			}
+			
 			while (!done) {
 				if (!playerToPlay) {
 					System.out.println("Please enter the x position to be placed at");
-					String x_value = stdIn.readLine();
+					int x_value = Integer.parseInt(stdIn.readLine());
 
 					System.out.println("Please enter the y position to be placed at");
-					String y_value = stdIn.readLine();
+					int y_value = Integer.parseInt(stdIn.readLine());
 
-					String coord = ("(" + x_value + ", " + y_value + ")");
+					String coord = ("(" + x_value + "," + y_value + ");");
+
+					int[] move = new int[] {x_value, y_value};
 
 					out.println(coord);
+					hex.play(move);
+					hex.printBoard();
+					hex.connectWithNeighbors(move);
+					if(hex.getWinner() != 0) {
+						done = true;
+						out.println("you-win; bye");
+					}
 
 					playerToPlay = true;
 				} else {
 					System.out.println("Waiting for opponents move...");
 					String coord = in.readLine();
 					System.out.println(coord);
+					String[] axis = coord.split(",");
+					
+					int x_value = Integer.parseInt(axis[0].replace("(", ""));
+					int y_value = Integer.parseInt(axis[1].replace(");", ""));
+					int[] move = new int[] {x_value, y_value};
+					hex.play(move);
+					hex.printBoard();
+					hex.connectWithNeighbors(move);
+					if(hex.getWinner() != 0) {
+						done = true;
+						out.println("you-win; bye");
+					}
 
-					playerToPlay = false;
+ 					playerToPlay = false;
 				}
 			}
 		} catch (IOException e) {
