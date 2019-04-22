@@ -84,6 +84,10 @@ public class Client {
 					play(out, in, stdIn);
 				}
 			}
+			else if (in.readLine().equals("reject")) {
+				System.out.println("reject");
+				System.exit(0);
+			}
 
 		} catch (ConnectException e) {
 			System.out.println("There was no server available. Press enter to try again");
@@ -152,10 +156,21 @@ public class Client {
 						while(true) {
 							try {
 								System.out.println("Please enter the x position to be placed at");
-								x_value = Integer.parseInt(stdIn.readLine());
+								String x_string = stdIn.readLine();
+								if (x_string.equals("bye")) {
+									out.println("bye");
+									System.exit(0);
+								}
+								x_value = Integer.parseInt(x_string);
 	
 								System.out.println("Please enter the y position to be placed at");
-								y_value = Integer.parseInt(stdIn.readLine());
+								String y_string = stdIn.readLine();
+								if (y_string.equals("bye")) {
+									out.println("bye");
+									System.exit(0);
+								}
+								y_value = Integer.parseInt(y_string);
+
 								if(x_value < 0 || x_value >= Hex.BOARD_SIZE || y_value < 0 || y_value >= Hex.BOARD_SIZE) {
 									throw new NumberFormatException();
 								}
@@ -193,6 +208,10 @@ public class Client {
 					System.out.println("Waiting for opponents move...");
 					coord = in.readLine();
 					System.out.println(coord);
+					if (coord.equals("bye")) {
+						clientSocket.close();
+						System.exit(0);
+					}
 					String[] axis = coord.replace(" ", "").split(",");
 
 					x_value = Integer.parseInt(axis[0].replace("(", ""));
