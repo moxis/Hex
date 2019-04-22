@@ -33,7 +33,7 @@ public class NoHeuristicsAIwithSaveBridgeSimulation extends Hex {
 
     @Override
     public List<int[]> getSmartMoves(boolean enhanced, int rollouts) {
-        if(rollouts > 300 && !enhanced) {
+        if(!enhanced) {
             // Saving bridges if one is being attacked
             List<int[]> defend = this.getBridgeToDefend();
             if(defend.size() != 0) {

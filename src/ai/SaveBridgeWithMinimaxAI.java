@@ -4,6 +4,11 @@ import java.util.*;
 import game.*;
 
 public class SaveBridgeWithMinimaxAI extends Hex {
+
+    public SaveBridgeWithMinimaxAI(int[][] state, int currentPlayer) {
+        super(state, currentPlayer);
+    }
+
     public SaveBridgeWithMinimaxAI() {
         super();
     }

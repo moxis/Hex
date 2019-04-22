@@ -142,34 +142,58 @@ public class Hex extends Game {
         int x = move[0];
         int y = move[1];
 
-        // 1
-        if (x + 1 < BOARD_SIZE && y - 2 >= 0) {
-            bridges.add(new int[] { x + 1, y - 2 });
+        // // 1
+        // if (x + 1 < BOARD_SIZE && y - 2 >= 0) {
+        //     bridges.add(new int[] { x + 1, y - 2 });
+        // }
+
+        // // 2
+        // if (x + 2 < BOARD_SIZE && y - 1 >= 0) {
+        //     bridges.add(new int[] { x + 2, y - 1 });
+        // }
+
+        // // 3
+        // if (x + 1 < BOARD_SIZE && y + 1 < BOARD_SIZE) {
+        //     bridges.add(new int[] { x + 1, y + 1 });
+        // }
+
+        // // 4
+        // if (x - 1 >= 0 && y + 2 < BOARD_SIZE) {
+        //     bridges.add(new int[] { x - 1, y + 2 });
+        // }
+
+        // // 5
+        // if (x - 2 >= 0 && y + 1 < BOARD_SIZE) {
+        //     bridges.add(new int[] { x - 2, y + 1 });
+        // }
+
+        // // 6
+        // if (x - 1 >= 0 && y - 1 >= 0) {
+        //     bridges.add(new int[] { x - 1, y - 1 });
+        // }
+
+        if (x - 1 >= 0 && y - 2 >= 0) {
+            bridges.add(new int[] { x - 1, y - 2 });
         }
 
-        // 2
-        if (x + 2 < BOARD_SIZE && y - 1 >= 0) {
-            bridges.add(new int[] { x + 2, y - 1 });
+        if (x + 1 < BOARD_SIZE && y - 1 >= 0) {
+            bridges.add(new int[] { x + 1, y - 1 });
         }
 
-        // 3
-        if (x + 1 < BOARD_SIZE && y + 1 < BOARD_SIZE) {
-            bridges.add(new int[] { x + 1, y + 1 });
+        if (x + 2 < BOARD_SIZE && y + 1 < BOARD_SIZE) {
+            bridges.add(new int[] { x + 2, y + 1 });
         }
 
-        // 4
-        if (x - 1 >= 0 && y + 2 < BOARD_SIZE) {
-            bridges.add(new int[] { x - 1, y + 2 });
+        if (x + 1 < BOARD_SIZE && y + 2 < BOARD_SIZE) {
+            bridges.add(new int[] { x + 1, y + 2 });
         }
 
-        // 5
-        if (x - 2 >= 0 && y + 1 < BOARD_SIZE) {
-            bridges.add(new int[] { x - 2, y + 1 });
+        if (x - 1 >= 0 && y + 1 < BOARD_SIZE) {
+            bridges.add(new int[] { x - 1, y + 1 });
         }
 
-        // 6
-        if (x - 1 >= 0 && y - 1 >= 0) {
-            bridges.add(new int[] { x - 1, y - 1 });
+        if (x - 2 >= 0 && y - 1 >= 0) {
+            bridges.add(new int[] { x - 2, y - 1 });
         }
 
         return bridges;

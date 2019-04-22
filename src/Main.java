@@ -18,6 +18,7 @@ public class Main {
      */
     public static void main(String[] args) {
         Hex.initializeWinConditions();
+
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
         boolean ai = false;
         System.out.println("Would you like local play (1) or server play (2)?");
@@ -172,7 +173,7 @@ public class Main {
     }
 
     public static void play(boolean AI_1, boolean AI_2) {
-        NoHeuristicsAI hex1 = null;
+        NoHeuristicsAIwithSaveBridgeSimulation hex1 = null;
         NoHeuristicsAI hex2 = null;
 
         boolean done = false;
@@ -180,17 +181,24 @@ public class Main {
         BufferedReader stdIn = new BufferedReader(new InputStreamReader(System.in));
 
         try {
-            if (AI_1) {
-				hex1 = new NoHeuristicsAI();
-				playerToPlay = false;
+            if (AI_1 && AI_2) {
+                hex1 = new NoHeuristicsAIwithSaveBridgeSimulation();
+                hex2 = new NoHeuristicsAI();
+            } else if(!(AI_1 || AI_2)) {
+                hex1 = new NoHeuristicsAIwithSaveBridgeSimulation();
             }
-            if (AI_2) {
-				hex2 = new NoHeuristicsAI(Hex.DEFAULT_BOARD, -1);
-				playerToPlay = true;
-			}
+            else {
+                if (AI_1) {
+                    hex1 = new NoHeuristicsAIwithSaveBridgeSimulation();
+                    playerToPlay = false;
+                }
+                if (AI_2) {
+                    hex2 = new NoHeuristicsAI(Hex.DEFAULT_BOARD, -1);
+                    playerToPlay = true;
+                }
+            }
 
             MonteCarlo mcts1 = new MonteCarlo(hex1, true, true, 2000);
-
             MonteCarlo mcts2 = new MonteCarlo(hex2, true, true, 2000);
 
             String coord = "";
@@ -216,15 +224,7 @@ public class Main {
                     }
 
                     coord = ("(" + x_value + "," + y_value + ");");
-                    System.out.println(coord);
-                    hex1.play(move);
-                    hex1.printBoard();
-                    hex1.connectWithNeighbors(move);
-                    if (hex1.getWinner() != 0) {
-                        done = true;
-                    }
-
-                    playerToPlay = true;
+                    System.out.println(coord);          
                 } else {
                     if (!AI_2) {
                         System.out.println("Please enter the x position to be placed at");
@@ -243,14 +243,36 @@ public class Main {
 
                     coord = ("(" + x_value + "," + y_value + ");");
                     System.out.println(coord);
+                }
+
+                if(hex1 != null) {
+                    if(hex1.getState()[move[0]][move[1]] == 0) {
+                        playerToPlay = !playerToPlay;
+                    }
+                } else {
+                    if(hex2.getState()[move[0]][move[1]] == 0) {
+                        playerToPlay = !playerToPlay;
+                    }
+                }
+
+                if(hex2 != null) {
                     hex2.play(move);
-                    hex2.printBoard();
                     hex2.connectWithNeighbors(move);
+                }
+
+                if(hex1 != null) {
+
+                    hex1.play(move);
+                    hex1.connectWithNeighbors(move);
+                    hex1.printBoard();
+                    if (hex1.getWinner() != 0) {
+                        done = true;
+                    }
+                } else {
+                    hex2.printBoard();
                     if (hex2.getWinner() != 0) {
                         done = true;
                     }
-
-                    playerToPlay = false;
                 }
             }
         } catch (IOException e) {

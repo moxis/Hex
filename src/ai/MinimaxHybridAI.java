@@ -5,6 +5,10 @@ import game.*;
 
 public class MinimaxHybridAI extends Hex {
 
+    public MinimaxHybridAI(int[][] state, int currentPlayer) {
+        super(state, currentPlayer);
+    }
+
     public MinimaxHybridAI() {
         super();
     }

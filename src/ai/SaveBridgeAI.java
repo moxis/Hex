@@ -4,6 +4,11 @@ import java.util.*;
 import game.*;
 
 public class SaveBridgeAI extends Hex {
+
+    public SaveBridgeAI(int[][] state, int currentPlayer) {
+        super(state, currentPlayer);
+    }
+    
     public SaveBridgeAI() {
         super();
     }

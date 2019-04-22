@@ -5,6 +5,10 @@ import java.util.*;
 
 public class EnhancedMovesWithSaveBridgeAI extends Hex {
 
+    public EnhancedMovesWithSaveBridgeAI(int[][] state, int currentPlayer) {
+        super(state, currentPlayer);
+    }
+
     public EnhancedMovesWithSaveBridgeAI() {
         super();
     }

@@ -62,13 +62,15 @@ public class Server {
 
 			boolean done = false;
 			while (!done) {
-				if (in.readLine().equals("hello")) {
-					out.println("hello");
-					if (in.readLine().equals("newgame")) {
-						out.println("ready");
-						play(out, in, stdIn);
+				try {
+					if (in.readLine().equals("hello")) {
+						out.println("hello");
+						if (in.readLine().equals("newgame")) {
+							out.println("ready");
+							play(out, in, stdIn);
+						}
 					}
-				}
+				} catch (NullPointerException e) {}
 			}
 
 		} catch (SocketException e) {
@@ -136,15 +138,20 @@ public class Server {
 					}
 
 					coord = ("(" + x_value + "," + y_value + ");");
-					out.println(coord);
-					hex.play(move);
-					hex.printBoard();
-					hex.connectWithNeighbors(move);
-					if (hex.getWinner() != 0) {
-						done = true;
-					}
+					
+					if(hex.getState()[move[0]][move[1]] == 0) {
+						out.println(coord);
+						hex.play(move);
+						hex.printBoard();
+						hex.connectWithNeighbors(move);
+						if (hex.getWinner() != 0) {
+							done = true;
+						}
 
-					playerToPlay = true;
+						playerToPlay = true;
+					} else {
+						System.out.println("Invalid move! Please enter again...");
+					}
 				} else {
 					System.out.println("Waiting for opponents move...");
 					coord = in.readLine();
@@ -154,19 +161,28 @@ public class Server {
 					x_value = Integer.parseInt(axis[0].replace("(", ""));
 					y_value = Integer.parseInt(axis[1].replace(");", ""));
 					move = new int[] { x_value, y_value };
-					hex.play(move);
-					hex.printBoard();
-					hex.connectWithNeighbors(move);
-					if (hex.getWinner() != 0) {
-						done = true;
-						out.println("you-win; bye");
-					}
 
-					playerToPlay = false;
+					if(hex.getState()[move[0]][move[1]] == 0) {
+						hex.play(move);
+						hex.printBoard();
+						hex.connectWithNeighbors(move);
+						if (hex.getWinner() != 0) {
+							done = true;
+							out.println("you-win; bye");
+						}
+
+						playerToPlay = false;
+					} else {
+						System.out.println("Received invalid move! Quitting...");
+						clientSocket.close();
+					}
 				}
 			}
 		} catch (IOException e) {
 			System.out.println("Something went wrong while reading in coords");
+		} catch (NullPointerException e) {
+			System.out.println("Unexpected disconnection from the client");
+			System.exit(0);
 		} finally {
 			// System.out.println("you-win; bye");
 			try {
@@ -175,6 +191,9 @@ public class Server {
 					System.out.println(finalMessage);
 				}
 				clientSocket.close();
+				System.out.println("Game finished! Restarting server...");
+				serverSocket.close();
+				this.communicate();
 			} catch (IOException e) {
 			}
 

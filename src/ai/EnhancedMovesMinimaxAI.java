@@ -5,6 +5,10 @@ import java.util.*;
 
 public class EnhancedMovesMinimaxAI extends Hex {
 
+    public EnhancedMovesMinimaxAI(int[][] state, int currentPlayer) {
+        super(state, currentPlayer);
+    }
+
     public EnhancedMovesMinimaxAI() {
         super();
     }
