@@ -84,6 +84,10 @@ public class Client {
 					play(out, in, stdIn);
 				}
 			}
+			else if (in.readLine().equals("reject")) {
+				System.out.println("reject");
+				System.exit(0);
+			}
 
 		} catch (ConnectException e) {
 			System.out.println("There was no server available. Press enter to try again");
