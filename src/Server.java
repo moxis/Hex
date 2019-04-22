@@ -5,6 +5,9 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+
+import com.sun.security.ntlm.Client;
+
 import ai.*;
 import game.*;
 
@@ -126,10 +129,21 @@ public class Server {
 						while(true) {
 							try {
 								System.out.println("Please enter the x position to be placed at");
-								x_value = Integer.parseInt(stdIn.readLine());
+								String x_string = stdIn.readLine();
+								if (x_string.equals("bye")) {
+									out.println("bye");
+									System.exit(0);
+								}
+								x_value = Integer.parseInt(x_string);
 	
 								System.out.println("Please enter the y position to be placed at");
-								y_value = Integer.parseInt(stdIn.readLine());
+								String y_string = stdIn.readLine();
+								if (y_string.equals("bye")) {
+									out.println("bye");
+									System.exit(0);
+								}
+								y_value = Integer.parseInt(y_string);
+								
 								if(x_value < 0 || x_value >= Hex.BOARD_SIZE || y_value < 0 || y_value >= Hex.BOARD_SIZE) {
 									throw new NumberFormatException();
 								}
@@ -169,6 +183,10 @@ public class Server {
 					System.out.println("Waiting for opponents move...");
 					coord = in.readLine();
 					System.out.println(coord);
+					if (coord.equals("bye")) {
+						clientSocket.close();
+						System.exit(0);
+					}
 					String[] axis = coord.replace(" ", "").split(",");
 
 					x_value = Integer.parseInt(axis[0].replace("(", ""));
