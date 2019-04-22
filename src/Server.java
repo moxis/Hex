@@ -123,11 +123,24 @@ public class Server {
 			while (!done) {
 				if (!playerToPlay) {
 					if (!ai) {
-						System.out.println("Please enter the x position to be placed at");
-						x_value = Integer.parseInt(stdIn.readLine());
+						while(true) {
+							try {
+								System.out.println("Please enter the x position to be placed at");
+								x_value = Integer.parseInt(stdIn.readLine());
+	
+								System.out.println("Please enter the y position to be placed at");
+								y_value = Integer.parseInt(stdIn.readLine());
+								if(x_value < 0 || x_value >= Hex.BOARD_SIZE || y_value < 0 || y_value >= Hex.BOARD_SIZE) {
+									throw new NumberFormatException();
+								}
 
-						System.out.println("Please enter the y position to be placed at");
-						y_value = Integer.parseInt(stdIn.readLine());
+								break;
+							} catch(NumberFormatException e) {
+								System.out.println("Invalid coordinates.. Try again");
+							}
+						}
+
+						
 						move = new int[] { x_value, y_value };
 					} else {
 						mcts.search(hex.getState());
