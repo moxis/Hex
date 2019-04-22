@@ -1,5 +1,8 @@
 import java.util.*;
 
+/**
+ * Class used to force multithreading and allow for faster AI calculations when playing Hex.
+ */
 class SimulationThread implements Runnable {
    static List<int[]> emptyArray = new ArrayList<int[]>();
 
@@ -8,6 +11,11 @@ class SimulationThread implements Runnable {
    private int[][] state;
    private MonteCarlo tree;
    
+   /**
+    * Constructor for the SimulationThread class
+    * @param state 2d array of integers representing the current board
+    * @param tree MonteCarlo object that represents the current tree of decisions to be made.
+    */
    SimulationThread(int[][] state, MonteCarlo tree) {
       this.state = state;
       this.tree = tree;

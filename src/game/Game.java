@@ -2,15 +2,29 @@ package game;
 
 import java.util.*;
 
+/**
+ * Class used to perform operations on the game
+ */
 public abstract class Game {
     private int[][] state;
     public int currentPlayer;
 
+    /**
+     * Constructor for the game class
+     * @param state 2d array of integers representing the current state of the game
+     * @param currentPlayer integer representig the current player of the game. 
+     */
     public Game(int[][] state, int currentPlayer) {
         this.state = copyState(state);
         this.currentPlayer = currentPlayer;
     }
 
+    /**
+     * Copies the current state of the board
+     * 
+     * @param state 2d array of integers representing the current state of the game
+     * @return 2d array of integers which is a copy of the current state
+     */
     public static int[][] copyState(int[][] state) {
         int[][] newState = new int[state.length][state.length];
         for (int i = 0; i < state.length; i++) {

@@ -11,6 +11,9 @@ import java.net.UnknownHostException;
 import ai.*;
 import game.*;
 
+/**
+ * Class to handle the server operations for the Client side of the networking.
+ */
 public class Client {
 	String hostName;
 	int portNumber;
@@ -20,13 +23,25 @@ public class Client {
 	PrintWriter out;
 	boolean ai = false;
 
+	/**
+	 * Constructor for the Client Class
+	 * 
+	 * @param hostName   String that represents the host to be used in the
+	 *                   connection
+	 * @param portNumber Integer representing the port to be connected to
+	 * @param ai         Boolean representing whether it will be ai or a local
+	 *                   player playing
+	 */
 	public Client(String hostName, int portNumber, boolean ai) {
 		this.hostName = hostName;
 		this.portNumber = portNumber;
 		this.ai = ai;
 	}
 
-	// Connects user to servers and starts game.
+	/**
+	 * Used to connect user to the server, and perform error handling if that is
+	 * unsuccessful
+	 */
 	public void communicate() {
 		try {
 			connect();
@@ -35,13 +50,23 @@ public class Client {
 			try {
 				clientSocket.close();
 			} catch (IOException e1) {
-				e1.printStackTrace();
+				System.out
+						.println("Something went wrong while reading in the connection, please reload and try again.");
+				System.exit(0);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {}
+			System.out.println("Something went wrong while connecting, please reload and try again.");
+			System.exit(0);
+		} finally {
+		}
 	}
 
+	/**
+	 * Connects the client to a designated server running Hex
+	 * 
+	 * @throws NullPointerException Used if the connection to the server is
+	 *                              interrupted
+	 */
 	public void connect() throws NullPointerException {
 		try {
 			stdIn = new BufferedReader(new InputStreamReader(System.in));
@@ -66,21 +91,33 @@ public class Client {
 				stdIn.readLine();
 				connect();
 			} catch (IOException e1) {
-				e1.printStackTrace();
+				System.out
+						.println("Something went wrong while reading in the connection, please reload and try again.");
+				System.exit(0);
 			}
 		} catch (IOException e) {
-			e.printStackTrace();
+			System.out.println("Something went wrong while reading in from the server, please reload and try again.");
+			System.exit(0);
 		}
 	}
 
-	public void play(PrintWriter out, BufferedReader in, BufferedReader stdIn) {
+	/**
+	 * The method used to play against a connected server in a game of hex.
+	 * 
+	 * @param out   PrintWriter used to send commands to the server
+	 * @param in    BufferedReader used to read in commands from the server
+	 * @param stdIn BufferedReader used to read in entry from the terminal keyboard.
+	 * @throws NullPointerException Must be thrown in case an unexpected
+	 *                              disconnection occurs from the server.
+	 */
+	public void play(PrintWriter out, BufferedReader in, BufferedReader stdIn) throws NullPointerException {
 		NoHeuristicsAI hex = null;
 
 		String str = "";
 		boolean done = false;
 
 		System.out.println("Type 1 to play first, type 2 to pass");
-		
+
 		try {
 			str = stdIn.readLine();
 			while (!(str.equals("1") || str.equals("2"))) {
@@ -98,12 +135,11 @@ public class Client {
 			hex = new NoHeuristicsAI(Hex.DEFAULT_BOARD, -1);
 			playerToPlay = true;
 			out.println("");
-		}
-		else {
+		} else {
 			hex = new NoHeuristicsAI();
 			out.println("pass");
 		}
-		
+
 		MonteCarlo mcts = new MonteCarlo(hex, true, true, 2000);
 		try {
 			String coord = "";
@@ -112,13 +148,13 @@ public class Client {
 			int y_value;
 			while (!done) {
 				if (playerToPlay) {
-					if(!ai) {
+					if (!ai) {
 						System.out.println("Please enter the x position to be placed at");
 						x_value = Integer.parseInt(stdIn.readLine());
 
 						System.out.println("Please enter the y position to be placed at");
 						y_value = Integer.parseInt(stdIn.readLine());
-						move = new int[] {x_value, y_value};
+						move = new int[] { x_value, y_value };
 					} else {
 						mcts.search(hex.getState());
 						move = mcts.returnBestMove(hex.getState());
@@ -132,25 +168,24 @@ public class Client {
 					hex.play(move);
 					hex.printBoard();
 					hex.connectWithNeighbors(move);
-					if(hex.getWinner() != 0) {
+					if (hex.getWinner() != 0) {
 						done = true;
 					}
 
 					playerToPlay = false;
-				}
-				else {
+				} else {
 					System.out.println("Waiting for opponents move...");
 					coord = in.readLine();
 					System.out.println(coord);
 					String[] axis = coord.replace(" ", "").split(",");
-					
+
 					x_value = Integer.parseInt(axis[0].replace("(", ""));
 					y_value = Integer.parseInt(axis[1].replace(");", ""));
-					move = new int[] {x_value, y_value};
+					move = new int[] { x_value, y_value };
 					hex.play(move);
 					hex.printBoard();
 					hex.connectWithNeighbors(move);
-					if(hex.getWinner() != 0) {
+					if (hex.getWinner() != 0) {
 						done = true;
 						out.println("you-win; bye");
 					}
@@ -159,16 +194,19 @@ public class Client {
 				}
 			}
 		} catch (IOException e) {
-			System.out.println("Something went wrong while reading in coords");
+			System.out.println("Something went wrong while reading in coords or reading in messages from the server.");
+			System.exit(0);
 		} finally {
-			// System.out.println("you-win; bye");
 			try {
 				String finalMessage = in.readLine();
-				if(finalMessage != null) {
+				if (finalMessage != null) {
 					System.out.println(finalMessage);
 				}
 				clientSocket.close();
-			} catch(IOException e) {}
+			} catch (IOException e) {
+				System.out.println("Something went wrong while reading in entry from the server.");
+				System.exit(0);
+			}
 		}
 	}
 }

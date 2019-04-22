@@ -18,13 +18,24 @@ public class Server {
 	PrintWriter out;
 	boolean ai = false;
 
+	/**
+	 * Constructor for the Client Class
+	 * 
+	 * @param hostName   String that represents the host to be used in the
+	 *                   connection
+	 * @param portNumber Integer representing the port to be connected to
+	 * @param ai         Boolean representing whether it will be ai or a local
+	 *                   player playing
+	 */
 	public Server(String hostName, int portNumber, boolean ai) {
 		this.hostName = hostName;
 		this.portNumber = portNumber;
 		this.ai = ai;
 	}
 
-	// Connects user to client and starts game.
+	/**
+	 * Connects user to client and starts game.
+	 */
 	public void communicate() {
 		try {
 			connect();
@@ -34,6 +45,10 @@ public class Server {
 
 	}
 
+	/**
+	 * Starts the connection and allows a client to connect, transfer the correct
+	 * protocol between the client and server and then starrt a game of Hex
+	 */
 	public void connect() {
 		try {
 			serverSocket = new ServerSocket(portNumber);
@@ -49,7 +64,7 @@ public class Server {
 			while (!done) {
 				if (in.readLine().equals("hello")) {
 					out.println("hello");
-					if (in.readLine().equals("new-game")) {
+					if (in.readLine().equals("newgame")) {
 						out.println("ready");
 						play(out, in, stdIn);
 					}
@@ -59,19 +74,29 @@ public class Server {
 		} catch (SocketException e) {
 			System.out.println(e.getMessage());
 			out.println("reject");
-
 		} catch (IOException e) {
-			System.out.println(e.getMessage());
+			System.out.println("There was in issue while reading in from the client");
+			System.exit(0);
 		} finally {
 			try {
 				serverSocket.close();
 			} catch (IOException e) {
-				e.printStackTrace();
+				System.out.println("There was an issue when closing the socket");
+				System.exit(0);
 			}
 		}
 	}
 
-	public void play(PrintWriter out, BufferedReader in, BufferedReader stdIn) {
+	/**
+	 * The method used to play against a connected client in a game of hex.
+	 * 
+	 * @param out   PrintWriter used to send commands to the server
+	 * @param in    BufferedReader used to read in commands from the server
+	 * @param stdIn BufferedReader used to read in entry from the terminal keyboard.
+	 * @throws NullPointerException Must be thrown in case an unexpected
+	 *                              disconnection occurs from the server.
+	 */
+	public void play(PrintWriter out, BufferedReader in, BufferedReader stdIn) throws NullPointerException {
 		NoHeuristicsAI hex = null;
 
 		boolean done = false;
@@ -85,7 +110,7 @@ public class Server {
 				hex = new NoHeuristicsAI(Hex.DEFAULT_BOARD, -1);
 				playerToPlay = true;
 			}
-			
+
 			MonteCarlo mcts = new MonteCarlo(hex, true, true, 2000);
 
 			String coord = "";
@@ -95,13 +120,13 @@ public class Server {
 
 			while (!done) {
 				if (!playerToPlay) {
-					if(!ai) {
+					if (!ai) {
 						System.out.println("Please enter the x position to be placed at");
 						x_value = Integer.parseInt(stdIn.readLine());
 
 						System.out.println("Please enter the y position to be placed at");
 						y_value = Integer.parseInt(stdIn.readLine());
-						move = new int[] {x_value, y_value};
+						move = new int[] { x_value, y_value };
 					} else {
 						mcts.search(hex.getState());
 						move = mcts.returnBestMove(hex.getState());
@@ -115,7 +140,7 @@ public class Server {
 					hex.play(move);
 					hex.printBoard();
 					hex.connectWithNeighbors(move);
-					if(hex.getWinner() != 0) {
+					if (hex.getWinner() != 0) {
 						done = true;
 					}
 
@@ -125,19 +150,19 @@ public class Server {
 					coord = in.readLine();
 					System.out.println(coord);
 					String[] axis = coord.replace(" ", "").split(",");
-					
+
 					x_value = Integer.parseInt(axis[0].replace("(", ""));
 					y_value = Integer.parseInt(axis[1].replace(");", ""));
-					move = new int[] {x_value, y_value};
+					move = new int[] { x_value, y_value };
 					hex.play(move);
 					hex.printBoard();
 					hex.connectWithNeighbors(move);
-					if(hex.getWinner() != 0) {
+					if (hex.getWinner() != 0) {
 						done = true;
 						out.println("you-win; bye");
 					}
 
- 					playerToPlay = false;
+					playerToPlay = false;
 				}
 			}
 		} catch (IOException e) {
@@ -146,12 +171,13 @@ public class Server {
 			// System.out.println("you-win; bye");
 			try {
 				String finalMessage = in.readLine();
-				if(finalMessage != null) {
+				if (finalMessage != null) {
 					System.out.println(finalMessage);
 				}
 				clientSocket.close();
-			} catch(IOException e) {}
-			
+			} catch (IOException e) {
+			}
+
 		}
 
 	}
