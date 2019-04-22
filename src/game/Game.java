@@ -60,4 +60,6 @@ public abstract class Game {
 
     // Update the state of the current game state and flip the current player
     public abstract void play(int[] move);
+
+    public abstract void printBoard();
 }

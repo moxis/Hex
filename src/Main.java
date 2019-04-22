@@ -173,8 +173,8 @@ public class Main {
     }
 
     public static void play(boolean AI_1, boolean AI_2) {
-        NoHeuristicsAIwithSaveBridgeSimulation hex1 = null;
-        NoHeuristicsAI hex2 = null;
+        Hex hex1 = null;
+        Hex hex2 = null;
 
         boolean done = false;
         boolean playerToPlay = true;
@@ -182,18 +182,18 @@ public class Main {
 
         try {
             if (AI_1 && AI_2) {
-                hex1 = new NoHeuristicsAIwithSaveBridgeSimulation();
-                hex2 = new NoHeuristicsAI();
+                hex1 = new NoHeuristicsAI();
+                hex2 = new NoHeuristicsAIwithSaveBridgeSimulation();
             } else if(!(AI_1 || AI_2)) {
-                hex1 = new NoHeuristicsAIwithSaveBridgeSimulation();
+                hex1 = new NoHeuristicsAI();
             }
             else {
                 if (AI_1) {
-                    hex1 = new NoHeuristicsAIwithSaveBridgeSimulation();
+                    hex1 = new NoHeuristicsAI();
                     playerToPlay = false;
                 }
                 if (AI_2) {
-                    hex2 = new NoHeuristicsAI(Hex.DEFAULT_BOARD, -1);
+                    hex2 = new NoHeuristicsAIwithSaveBridgeSimulation(Hex.DEFAULT_BOARD, -1);
                     playerToPlay = true;
                 }
             }
