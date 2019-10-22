@@ -1,4 +1,5 @@
-# CS1006-Hex
+# Hex
+Hex Board Game implementation in Java with MTCS AI and websocket support.
 
     javac *.java ai/*.java game/*.java
     java Main
